@@ -10069,7 +10069,8 @@ async def get_session_detail(session_id: str, agent: str):
                             })
                     if blocks:
                         norm = {"type": "assistant", "message":
-                                {"role": "assistant", "content": blocks}}
+                                {"role": "assistant", "content": blocks,
+                                 "usage": m.get("usage")}}
 
                 elif role == "toolResult":
                     content = m.get("content")

@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 // the URL. Falls back to loopback during SSR, where window is unavailable.
 export const API_BASE = (() => {
   const explicit = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "");
-  if (explicit) return explicit;
+  if (explicit !== undefined && explicit !== null) return explicit;
   const port = process.env.NEXT_PUBLIC_API_PORT || "8000";
   if (typeof window !== "undefined") {
     return `${window.location.protocol}//${window.location.hostname}:${port}`;

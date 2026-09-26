@@ -173,6 +173,7 @@ interface StepTokens {
 /* Extract per-step token usage where the trace records it:
    - Claude / Cursor: each assistant JSONL line carries `message.usage`
      (one API call's usage, repeated on every line of that call);
+   - Pi: `message.usage` with camelCase input/output/cacheRead/cacheWrite;
    - Codex: `token_count` event_msgs report per-turn usage — attached to the
      preceding event as `_tt_tokens` in normalizeTraceEvents;
    - OpenCode: `step-finish` parts carry usage — attached backend-side as
@@ -185,6 +186,14 @@ function eventTokens(evt: TraceValue): StepTokens | null {
       output: u.output_tokens || 0,
       cacheRead: u.cache_read_input_tokens ?? u.cached_input_tokens ?? 0,
       cacheWrite: u.cache_creation_input_tokens || 0,
+    };
+  }
+  if (u && (u.input != null || u.output != null)) {
+    return {
+      input: u.input || 0,
+      output: u.output || 0,
+      cacheRead: u.cacheRead || 0,
+      cacheWrite: u.cacheWrite || 0,
     };
   }
   const t = evt.tokens;

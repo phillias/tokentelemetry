@@ -1,0 +1,66 @@
+name: Upstream Sync Check
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  check-upstream:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - name: Check for upstream changes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const upstream = 'VasiHemanth/tokentelemetry';
+            const { data: upstreamRepo } = await github.rest.repos.get({ owner: 'VasiHemanth', repo: 'tokentelemetry' });
+            const upstreamDefault = upstreamRepo.default_branch;
+            const { data: compare } = await github.rest.repos.compareCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: context.sha,
+              head: `${upstream}:${upstreamDefault}`,
+            });
+            if (compare.status === 'behind' && compare.behind_by > 0) {
+              const { data: issues } = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                labels: 'upstream-sync',
+              });
+              const title = `Upstream has ${compare.behind_by} new commit(s)`;
+              const existing = issues.find(i => i.title.startsWith('Upstream has'));
+              const body = [
+                `Upstream **${upstream}** is **${compare.behind_by} commit(s)** ahead of this fork.`,
+                '',
+                `Compare: ${compare.html_url}`,
+                '',
+                '### New commits:',
+                ...compare.commits.slice(-20).map(c =>
+                  `- [${c.sha.slice(0,7)}](${c.html_url}) ${c.commit.message.split('\n')[0]}`
+                ),
+                '',
+                'Run `git fetch upstream && git merge upstream/main` to sync, then resolve any conflicts with local patches.',
+              ].join('\n');
+              if (existing) {
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: existing.number,
+                  title,
+                  body,
+                });
+              } else {
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title,
+                  body,
+                  labels: ['upstream-sync'],
+                });
+              }
+            }
