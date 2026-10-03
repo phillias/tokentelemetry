@@ -182,8 +182,8 @@ def test_commandcode_provider_maps_windows_and_monthly_pool(tmp_path):
             return 200, {"planId": "individual-goat", "org": {"id": "org-1"}}
         if url.endswith("/alpha/billing/credits?orgId=org-1"):
             return 200, {"windowLimits": {
-                "fiveHour": {"cap": 14, "used": 3.5},
-                "weekly": {"cap": 35, "used": 7},
+                "fiveHour": {"cap": 14, "used": 3.5, "resetAt": 1789400000000},
+                "weekly": {"cap": 35, "used": 7, "resetAt": 1789400000000},
             }}
         if url.endswith("/alpha/billing/subscriptions?orgId=org-1"):
             return 200, {"data": {
@@ -202,7 +202,9 @@ def test_commandcode_provider_maps_windows_and_monthly_pool(tmp_path):
     assert snapshot.plan == "Individual-Goat"
     assert snapshot.resources["session"].used == 3.5
     assert snapshot.resources["session"].limit == 14
-    assert snapshot.resources["weekly"].used == 7
+    # Command Code window resets are unix milliseconds, never seconds.
+    assert snapshot.resources["session"].resets_at == datetime(2026, 9, 14, 15, 33, 20, tzinfo=timezone.utc)
+    assert snapshot.resources["weekly"].resets_at == datetime(2026, 9, 14, 15, 33, 20, tzinfo=timezone.utc)
     assert snapshot.resources["monthly"].used == 70
     assert snapshot.resources["monthly"].limit == 70
 
@@ -241,9 +243,9 @@ def test_zai_provider_maps_session_and_weekly_rows_and_skips_rate_limits(tmp_pat
             "level": "lite",
             "limits": [
                 {"type": "TOKENS_LIMIT", "unit": 3, "number": 5, "percentage": 12,
-                 "nextResetTime": "2026-09-01T05:00:00Z"},
+                 "nextResetTime": 1788238800000},
                 {"type": "CREDIT_LIMIT", "unit": 6, "number": 1, "percentage": 34,
-                 "nextResetTime": "2026-09-08T00:00:00Z"},
+                 "nextResetTime": 1788825600000},
                 {"type": "RATE_LIMIT", "percentage": 99},
                 {"type": "TIMES_LIMIT", "percentage": 99},
             ],
@@ -255,6 +257,9 @@ def test_zai_provider_maps_session_and_weekly_rows_and_skips_rate_limits(tmp_pat
     assert set(snapshot.resources) == {"session", "weekly"}
     assert snapshot.resources["session"].used == 12
     assert snapshot.resources["weekly"].used == 34
+    # nextResetTime is unix milliseconds, like every real Z.AI response.
+    assert snapshot.resources["session"].resets_at == datetime(2026, 9, 1, 5, tzinfo=timezone.utc)
+    assert snapshot.resources["weekly"].resets_at == datetime(2026, 9, 8, tzinfo=timezone.utc)
 
 
 def test_zai_provider_reads_pi_auth_aliases_and_falls_back_to_bigmodel(tmp_path):
@@ -278,6 +283,42 @@ def test_zai_provider_reads_pi_auth_aliases_and_falls_back_to_bigmodel(tmp_path)
     assert seen[0].startswith("https://api.z.ai/")
     assert seen[-1].startswith("https://open.bigmodel.cn/")
     assert snapshot.resources["session"].used == 3
+
+
+def test_zai_provider_tries_both_endpoints_before_reporting_rejected_login(tmp_path):
+    home = tmp_path / "home"
+    home.mkdir()
+    seen = []
+
+    def fetch(url, headers):
+        seen.append(url)
+        if "api.z.ai" in url:
+            return 401, {}
+        return 200, {"limits": [
+            {"type": "TOKENS_LIMIT", "unit": 3, "number": 5, "percentage": 10,
+             "nextResetTime": 1788238800000},
+        ]}
+
+    snapshot = ZaiQuotaProvider(
+        home=home, fetch_json=fetch, environment={"ZAI_API_KEY": "zai-key"},
+    ).refresh(datetime(2026, 9, 1, tzinfo=timezone.utc))
+    # A rejection on the international endpoint must not skip the BigModel
+    # fallback for a key that only that endpoint accepts.
+    assert len(seen) == 2
+    assert seen[-1].startswith("https://open.bigmodel.cn/")
+    assert snapshot.resources["session"].used == 10
+
+    both_rejected = ZaiQuotaProvider(
+        home=home,
+        fetch_json=lambda _url, _headers: (403, {}),
+        environment={"ZAI_API_KEY": "zai-key"},
+    )
+    try:
+        both_rejected.refresh(datetime(2026, 9, 1, tzinfo=timezone.utc))
+    except RuntimeError as error:
+        assert str(error) == "local login was rejected"
+    else:
+        raise AssertionError("expected a rejected login")
 
 
 def test_kimi_provider_maps_weekly_pool_and_five_hour_window(tmp_path):
@@ -331,8 +372,8 @@ def test_phoenixgrove_provider_maps_gauge_and_bank(tmp_path):
         home=home,
         fetch_json=lambda _url, _headers: (200, {"data": {
             "plan": "grove",
-            "usage": {"percent": 25, "resetsAt": "2026-09-01T05:00:00Z"},
-            "weekly": {"used": 10, "cap": 100},
+            "usage": {"percent": 25, "resetsAt": 1788238800000},
+            "weekly": {"used": 10, "cap": 100, "resetAt": 1788825600000},
             "bank": {"remaining": 42},
         }}),
         environment={"PGS_API_KEY": "pgs-key"},
@@ -340,7 +381,9 @@ def test_phoenixgrove_provider_maps_gauge_and_bank(tmp_path):
 
     assert snapshot.plan == "Grove"
     assert snapshot.resources["session"].used == 25
+    assert snapshot.resources["session"].resets_at == datetime(2026, 9, 1, 5, tzinfo=timezone.utc)
     assert snapshot.resources["weekly"].used == 10
+    assert snapshot.resources["weekly"].resets_at == datetime(2026, 9, 8, tzinfo=timezone.utc)
     assert snapshot.resources["bank"].available == 42
 
 

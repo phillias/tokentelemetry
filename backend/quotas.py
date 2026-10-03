@@ -155,7 +155,10 @@ def _iso(value: datetime) -> str:
 
 def _date(value: Any) -> Optional[datetime]:
     if isinstance(value, (int, float)):
-        return datetime.fromtimestamp(float(value), tz=timezone.utc)
+        epoch = float(value)
+        if epoch > 10_000_000_000:
+            epoch = epoch / 1000.0
+        return datetime.fromtimestamp(epoch, tz=timezone.utc)
     if not isinstance(value, str) or not value.strip():
         return None
     try:
@@ -1551,17 +1554,21 @@ class ZaiQuotaProvider:
             raise RuntimeError(NOT_SIGNED_IN)
         headers = {"Authorization": f"Bearer {key}"}
         payload: Optional[Dict[str, Any]] = None
+        login_rejected = False
         for url in self.usage_urls:
             try:
                 status, body = self.fetch_json(url, headers)
             except RuntimeError:
                 continue
             if status in (401, 403):
-                raise RuntimeError(LOGIN_REJECTED)
+                login_rejected = True
+                continue
             if 200 <= status < 300:
                 payload = body
                 break
         if payload is None:
+            if login_rejected:
+                raise RuntimeError(LOGIN_REJECTED)
             raise RuntimeError("usage request failed")
         data = payload.get("data") if isinstance(payload.get("data"), dict) else payload
         limits = data.get("limits") if isinstance(data, dict) else None
@@ -1796,8 +1803,6 @@ class PhoenixGroveQuotaProvider:
         if percent is None:
             return None
         resets = entry.get("resetsAt") or entry.get("resetAt") or entry.get("nextResetTime")
-        if isinstance(resets, (int, float)):
-            resets = resets / 1000 if resets <= 10_000_000_000 else resets
         return QuotaResource(
             kind="consumption", unit="percent", used=percent, limit=100,
             resets_at=_date(resets),
