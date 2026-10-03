@@ -1,6 +1,7 @@
 import {
   Terminal, Database, Sparkles, Orbit, Cpu, Zap, MousePointer2,
-  GitBranch, Code2, Server, Bot, Boxes, SquareTerminal, Moon, type LucideIcon,
+  GitBranch, Code2, Server, Bot, Boxes, SquareTerminal, Moon,
+  Waypoints, Flame, type LucideIcon,
 } from "lucide-react";
 import HermesIcon from "@/components/icons/HermesIcon";
 import GrokIcon from "@/components/icons/GrokIcon";
@@ -13,7 +14,8 @@ export type AgentKey =
   | "claude" | "codex" | "gemini" | "antigravity"
   | "qwen" | "vibe" | "cursor" | "copilot" | "opencode" | "hermes" | "grok"
   | "openai_compat" | "cline" | "smallcode" | "pi" | "muse" | "prime" | "dsh"
-  | "qoder" | "zcode" | "kimi";
+  | "qoder" | "zcode" | "kimi"
+  | "openrouter" | "commandcode" | "zai" | "phoenixgrove";
 
 export interface AgentMeta {
   key: AgentKey;
@@ -52,6 +54,13 @@ export const AGENTS: Record<AgentKey, AgentMeta> = {
   // gets the same theme-aware tint treatment with a dark hex rather than a
   // blue that would collide with muse/dsh/qwen.
   kimi:        { key: "kimi",        label: "Kimi Code",   hex: "#18181b", icon: Moon },
+  // API-billed providers with live plan-limits quota but no local session
+  // transcripts: they surface on the quotas surface and the agents list, but
+  // never as session tiles (the scanner has nothing to count for them).
+  openrouter:   { key: "openrouter",   label: "OpenRouter",    hex: "#fb7185", icon: Waypoints },
+  commandcode: { key: "commandcode", label: "Command Code",  hex: "#4ade80", icon: Terminal },
+  zai:         { key: "zai",         label: "Z.AI",          hex: "#e4e4e7", icon: Sparkles },
+  phoenixgrove: { key: "phoenixgrove", label: "Phoenix Grove", hex: "#ef4444", icon: Flame },
 };
 
 const FALLBACK: AgentMeta = {

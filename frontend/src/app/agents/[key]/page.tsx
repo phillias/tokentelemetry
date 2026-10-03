@@ -146,7 +146,7 @@ export default function AgentPanelPage() {
       <header className="flex flex-wrap items-start justify-between gap-6 pb-6 border-b border-[var(--tt-border)]">
         <div className="flex items-start gap-4 min-w-0">
           <Link
-            href="/"
+            href="/agents"
             title="Back to agents"
             aria-label="Back to agents"
             className="mt-1 h-9 w-9 grid place-items-center rounded-[var(--tt-radius)] border border-[var(--tt-border)] text-[var(--tt-fg-muted)] hover:text-[var(--tt-fg)] hover:tt-tint-1 transition-colors shrink-0"
