@@ -49,6 +49,8 @@ const RESOURCE_NAMES: Record<string, string> = {
   session: "Session",
   weekly: "Weekly",
   monthly: "Monthly",
+  balance: "Balance",
+  bank: "Usage bank",
   sonnetWeekly: "Sonnet weekly",
   spark: "Spark",
   sparkWeekly: "Spark weekly",

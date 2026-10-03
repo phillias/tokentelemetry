@@ -70,7 +70,7 @@ function Meter({ m }: { m: PanelMeter }) {
   // a 74-hour-old cache would otherwise render "resets 3 days ago", which reads
   // as broken. Past the reset point the percentage is history, not status.
   const resetAt = m.resets_at ? new Date(m.resets_at) : null;
-  const elapsed = !!resetAt && !Number.isNaN(resetAt.getTime()) && resetAt.getTime() < Date.now();
+  const elapsed = !!resetAt && !Number.isNaN(resetAt.getTime()) && resetAt.getTime() < new Date().getTime();
   return (
     <div className="py-3 first:pt-0 last:pb-0 border-b border-[var(--tt-border)] last:border-b-0">
       <div className="flex items-baseline justify-between gap-3">

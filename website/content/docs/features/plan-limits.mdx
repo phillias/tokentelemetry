@@ -1,6 +1,6 @@
 ---
 title: Plan Limits
-description: Live session, weekly and monthly quota windows read from the coding-agent logins already on your machine — Claude Code, Codex, Copilot, OpenCode and Grok.
+description: Live session, weekly and monthly quota windows read from the coding-agent logins already on your machine — Claude Code, Codex, Copilot, OpenCode, Grok, Kimi Code, OpenRouter, Command Code, Z.AI and Phoenix Grove.
 ---
 
 import { Callout } from 'fumadocs-ui/components/callout';
@@ -17,7 +17,7 @@ Hover it for the full breakdown: every window for every signed-in agent, with re
 
 Each window fills as it is spent and carries its own reset time, so a nearly-spent weekly is visible next to a session that has barely started. Above, Claude Code's weekly sits at 91% and is red while its session is at 24%, and Codex reports credits and rate-limit resets as plain balances because neither has a ceiling to fill.
 
-Each agent's own page (**Agents → Claude Code**, and so on) carries the same reading in its panel, and the dashboard's agent tiles show a slim meter for that agent's closest-to-full window.
+Each agent's own page (**Agents → Claude Code**, and so on) carries the same reading in its panel, and the dashboard's agent tiles show a slim meter for that agent's closest-to-full window. A dedicated **Agents** page lists every detected agent next to its quota state — the closest-to-full window when there is one, otherwise the reason there isn't.
 
 ## Which agents report
 
@@ -30,6 +30,11 @@ Each agent's own page (**Agents → Claude Code**, and so on) carries the same r
 | **Grok Code Fast** | Weekly credit pool | `~/.grok/auth.json` |
 | **Cursor** | Monthly usage, on-demand spend | Cursor's local state database |
 | **Gemini CLI** | Per-model quota | `~/.gemini/oauth_creds.json` |
+| **Kimi Code** | 5-hour session, weekly pool | Pi's `kimi-coding` login, or the Kimi Code CLI's own credential file |
+| **OpenRouter** | USD spend-cap balance (spent vs cap) | `OPENROUTER_API_KEY`, OpenCode's saved key, or Pi's saved key |
+| **Command Code** | 5-hour session, weekly window, monthly USD pool | `COMMAND_CODE_API_KEY`, OpenCode's `.command-code.key`, or Pi's `models.json` entry |
+| **Z.AI** | 5-hour session and weekly token/credit windows | `ZAI_API_KEY` / `BIGMODEL_API_KEY`, or Pi's saved key; international and BigModel endpoints |
+| **Phoenix Grove** | Session gauge, weekly window, usage bank | `PHOENIXGROVE_API_KEY` / `PGS_API_KEY`, or OpenCode's `.phoenixgrove-key` |
 
 Every other supported agent is still listed, with the reason it has no live number. TokenTelemetry never invents a quota: if a provider exposes no account API, the card says so rather than estimating one from your session history.
 

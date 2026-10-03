@@ -17,15 +17,20 @@ from quotas import (
     _CacheFileLock,
     ClaudeQuotaProvider,
     CodexQuotaProvider,
+    CommandCodeQuotaProvider,
     CopilotQuotaProvider,
     CursorQuotaProvider,
     FRESHNESS,
     GeminiQuotaProvider,
     GrokQuotaProvider,
+    KimiQuotaProvider,
     OpenCodeQuotaProvider,
+    OpenRouterQuotaProvider,
+    PhoenixGroveQuotaProvider,
     QuotaService,
     QuotaSnapshot,
     StaticQuotaProvider,
+    ZaiQuotaProvider,
     default_quota_providers,
 )
 
@@ -129,6 +134,284 @@ def test_opencode_and_copilot_providers_normalize_their_native_quota_shapes(tmp_
     assert copilot.resources["credits"].used == 25
     assert copilot.resources["credits"].limit == 100
     assert copilot.resources["extraUsage"].used == 4
+
+
+def test_openrouter_provider_maps_key_balance_and_prefers_env(tmp_path):
+    home = tmp_path / "home"
+    home.mkdir()
+    snapshot = OpenRouterQuotaProvider(
+        home=home,
+        fetch_json=lambda _url, _headers: (200, {
+            "data": {"limit": 500, "usage": 95.46, "limit_remaining": 404.54, "limit_reset": None},
+        }),
+        environment={"OPENROUTER_API_KEY": "or-key"},
+    ).refresh(datetime(2026, 9, 1, tzinfo=timezone.utc))
+
+    assert snapshot.resources["balance"].used == 95.46
+    assert snapshot.resources["balance"].limit == 500
+    assert snapshot.resources["balance"].unit == "usd"
+
+    assert not OpenRouterQuotaProvider(home=home, environment={}).has_local_credentials()
+
+
+def test_openrouter_provider_falls_back_to_opencode_auth(tmp_path):
+    home = tmp_path / "home"
+    auth = home / ".local" / "share" / "opencode" / "auth.json"
+    auth.parent.mkdir(parents=True)
+    auth.write_text(json.dumps({"openrouter": {"key": "oc-key"}}))
+    provider = OpenRouterQuotaProvider(home=home, environment={})
+    assert provider.has_local_credentials()
+
+    snapshot = OpenRouterQuotaProvider(
+        home=home,
+        fetch_json=lambda _url, _headers: (200, {"limit": 100, "limit_remaining": 40, "usage": 60}),
+        environment={},
+    ).refresh(datetime(2026, 9, 1, tzinfo=timezone.utc))
+    assert snapshot.resources["balance"].used == 60
+    assert snapshot.resources["balance"].limit == 100
+
+
+def test_commandcode_provider_maps_windows_and_monthly_pool(tmp_path):
+    home = tmp_path / "home"
+    home.mkdir()
+    calls = []
+
+    def fetch(url, headers):
+        calls.append(url)
+        if url.endswith("/alpha/whoami"):
+            return 200, {"planId": "individual-goat", "org": {"id": "org-1"}}
+        if url.endswith("/alpha/billing/credits?orgId=org-1"):
+            return 200, {"windowLimits": {
+                "fiveHour": {"cap": 14, "used": 3.5, "resetAt": 1789400000000},
+                "weekly": {"cap": 35, "used": 7, "resetAt": 1789400000000},
+            }}
+        if url.endswith("/alpha/billing/subscriptions?orgId=org-1"):
+            return 200, {"data": {
+                "planId": "individual-goat",
+                "currentPeriodStart": "2026-09-12T22:33:40Z",
+                "currentPeriodEnd": "2026-10-12T22:33:40Z",
+            }}
+        if "/alpha/usage/summary" in url:
+            return 200, {"totalMonthlyCredits": 70}
+        raise AssertionError(f"unexpected url {url}")
+
+    snapshot = CommandCodeQuotaProvider(
+        home=home, fetch_json=fetch, environment={"COMMAND_CODE_API_KEY": "cc-key"},
+    ).refresh(datetime(2026, 9, 1, tzinfo=timezone.utc))
+
+    assert snapshot.plan == "Individual-Goat"
+    assert snapshot.resources["session"].used == 3.5
+    assert snapshot.resources["session"].limit == 14
+    # Command Code window resets are unix milliseconds, never seconds.
+    assert snapshot.resources["session"].resets_at == datetime(2026, 9, 14, 15, 33, 20, tzinfo=timezone.utc)
+    assert snapshot.resources["weekly"].resets_at == datetime(2026, 9, 14, 15, 33, 20, tzinfo=timezone.utc)
+    assert snapshot.resources["monthly"].used == 70
+    assert snapshot.resources["monthly"].limit == 70
+
+
+def test_commandcode_provider_reads_the_key_file_and_rejects_unknown_plans(tmp_path):
+    home = tmp_path / "home"
+    key_file = home / ".config" / "opencode" / ".command-code.key"
+    key_file.parent.mkdir(parents=True)
+    key_file.write_text("file-key\n")
+    assert CommandCodeQuotaProvider(home=home, environment={}).has_local_credentials()
+
+    def fetch(url, headers):
+        if url.endswith("/alpha/whoami"):
+            return 200, {"planId": "individual-future"}
+        if "/alpha/billing/credits" in url:
+            return 200, {"windowLimits": {"weekly": {"cap": 35, "used": 1}}}
+        if "/alpha/billing/subscriptions" in url:
+            return 200, {"planId": "individual-future", "currentPeriodStart": "2026-09-01T00:00:00Z"}
+        if "/alpha/usage/summary" in url:
+            return 200, {"totalMonthlyCredits": 5}
+        raise AssertionError(f"unexpected url {url}")
+
+    snapshot = CommandCodeQuotaProvider(home=home, fetch_json=fetch, environment={}).refresh(
+        datetime(2026, 9, 1, tzinfo=timezone.utc))
+    # An unknown future plan id maps to no monthly window rather than a guess.
+    assert set(snapshot.resources) == {"weekly"}
+    assert snapshot.plan == "Individual-Future"
+
+
+def test_zai_provider_maps_session_and_weekly_rows_and_skips_rate_limits(tmp_path):
+    home = tmp_path / "home"
+    home.mkdir()
+    snapshot = ZaiQuotaProvider(
+        home=home,
+        fetch_json=lambda _url, _headers: (200, {"data": {
+            "level": "lite",
+            "limits": [
+                {"type": "TOKENS_LIMIT", "unit": 3, "number": 5, "percentage": 12,
+                 "nextResetTime": 1788238800000},
+                {"type": "CREDIT_LIMIT", "unit": 6, "number": 1, "percentage": 34,
+                 "nextResetTime": 1788825600000},
+                {"type": "RATE_LIMIT", "percentage": 99},
+                {"type": "TIMES_LIMIT", "percentage": 99},
+            ],
+        }}),
+        environment={"ZAI_API_KEY": "zai-key"},
+    ).refresh(datetime(2026, 9, 1, tzinfo=timezone.utc))
+
+    assert snapshot.plan == "Lite"
+    assert set(snapshot.resources) == {"session", "weekly"}
+    assert snapshot.resources["session"].used == 12
+    assert snapshot.resources["weekly"].used == 34
+    # nextResetTime is unix milliseconds, like every real Z.AI response.
+    assert snapshot.resources["session"].resets_at == datetime(2026, 9, 1, 5, tzinfo=timezone.utc)
+    assert snapshot.resources["weekly"].resets_at == datetime(2026, 9, 8, tzinfo=timezone.utc)
+
+
+def test_zai_provider_reads_pi_auth_aliases_and_falls_back_to_bigmodel(tmp_path):
+    home = tmp_path / "home"
+    auth = home / ".pi" / "agent" / "auth.json"
+    auth.parent.mkdir(parents=True)
+    auth.write_text(json.dumps({"zhipu": {"key": "pi-zai-key"}}))
+    seen = []
+
+    def fetch(url, headers):
+        seen.append(url)
+        if "api.z.ai" in url:
+            raise RuntimeError("network")
+        return 200, {"limits": [
+            {"type": "TOKENS_LIMIT", "unit": 3, "number": 5,
+             "currentValue": 3, "usage": 100},
+        ]}
+
+    snapshot = ZaiQuotaProvider(home=home, fetch_json=fetch, environment={}).refresh(
+        datetime(2026, 9, 1, tzinfo=timezone.utc))
+    assert seen[0].startswith("https://api.z.ai/")
+    assert seen[-1].startswith("https://open.bigmodel.cn/")
+    assert snapshot.resources["session"].used == 3
+
+
+def test_zai_provider_tries_both_endpoints_before_reporting_rejected_login(tmp_path):
+    home = tmp_path / "home"
+    home.mkdir()
+    seen = []
+
+    def fetch(url, headers):
+        seen.append(url)
+        if "api.z.ai" in url:
+            return 401, {}
+        return 200, {"limits": [
+            {"type": "TOKENS_LIMIT", "unit": 3, "number": 5, "percentage": 10,
+             "nextResetTime": 1788238800000},
+        ]}
+
+    snapshot = ZaiQuotaProvider(
+        home=home, fetch_json=fetch, environment={"ZAI_API_KEY": "zai-key"},
+    ).refresh(datetime(2026, 9, 1, tzinfo=timezone.utc))
+    # A rejection on the international endpoint must not skip the BigModel
+    # fallback for a key that only that endpoint accepts.
+    assert len(seen) == 2
+    assert seen[-1].startswith("https://open.bigmodel.cn/")
+    assert snapshot.resources["session"].used == 10
+
+    both_rejected = ZaiQuotaProvider(
+        home=home,
+        fetch_json=lambda _url, _headers: (403, {}),
+        environment={"ZAI_API_KEY": "zai-key"},
+    )
+    try:
+        both_rejected.refresh(datetime(2026, 9, 1, tzinfo=timezone.utc))
+    except RuntimeError as error:
+        assert str(error) == "local login was rejected"
+    else:
+        raise AssertionError("expected a rejected login")
+
+
+def test_kimi_provider_maps_weekly_pool_and_five_hour_window(tmp_path):
+    home = tmp_path / "home"
+    auth = home / ".pi" / "agent" / "auth.json"
+    auth.parent.mkdir(parents=True)
+    auth.write_text(json.dumps({"kimi-coding": {"type": "api_key", "key": "kimi-key"}}))
+    snapshot = KimiQuotaProvider(
+        home=home,
+        fetch_json=lambda _url, _headers: (200, {
+            "usage": {"limit": 1000, "remaining": 800, "resetTime": "2026-09-08T00:00:00Z"},
+            "limits": [
+                {"window": {"timeUnit": "hour", "duration": 5},
+                 "detail": {"limit": 200, "used": 50, "resetTime": "2026-09-01T05:00:00Z"}},
+                {"window": {"timeUnit": "month", "duration": 1},
+                 "detail": {"limit": 5000, "used": 100}},
+            ],
+        }),
+        environment={},
+    ).refresh(datetime(2026, 9, 1, tzinfo=timezone.utc))
+
+    # Month-length windows are skipped: their second count varies by month.
+    assert set(snapshot.resources) == {"weekly", "session"}
+    assert snapshot.resources["weekly"].used == 20
+    assert snapshot.resources["session"].used == 25
+
+
+def test_kimi_provider_reads_the_cli_credential_file(tmp_path):
+    home = tmp_path / "home"
+    creds = home / ".kimi-code" / "credentials" / "kimi-code.json"
+    creds.parent.mkdir(parents=True)
+    creds.write_text(json.dumps({"access_token": "cli-token", "expires_at": 9_999_999_999}))
+    provider = KimiQuotaProvider(home=home, environment={})
+    assert provider.has_local_credentials()
+
+    def fetch(url, headers):
+        if headers["Authorization"] == "Bearer cli-token":
+            return 200, {"usage": {"limit": 100, "used": 10}}
+        return 401, {}
+
+    snapshot = KimiQuotaProvider(
+        home=home, fetch_json=fetch, environment={},
+    ).refresh(datetime(2026, 9, 1, tzinfo=timezone.utc))
+    assert snapshot.resources["weekly"].used == 10
+
+
+def test_phoenixgrove_provider_maps_gauge_and_bank(tmp_path):
+    home = tmp_path / "home"
+    home.mkdir()
+    snapshot = PhoenixGroveQuotaProvider(
+        home=home,
+        fetch_json=lambda _url, _headers: (200, {"data": {
+            "plan": "grove",
+            "usage": {"percent": 25, "resetsAt": 1788238800000},
+            "weekly": {"used": 10, "cap": 100, "resetAt": 1788825600000},
+            "bank": {"remaining": 42},
+        }}),
+        environment={"PGS_API_KEY": "pgs-key"},
+    ).refresh(datetime(2026, 9, 1, tzinfo=timezone.utc))
+
+    assert snapshot.plan == "Grove"
+    assert snapshot.resources["session"].used == 25
+    assert snapshot.resources["session"].resets_at == datetime(2026, 9, 1, 5, tzinfo=timezone.utc)
+    assert snapshot.resources["weekly"].used == 10
+    assert snapshot.resources["weekly"].resets_at == datetime(2026, 9, 8, tzinfo=timezone.utc)
+    assert snapshot.resources["bank"].available == 42
+
+
+def test_phoenixgrove_provider_reads_the_key_file_and_rejects_denied_usage(tmp_path):
+    home = tmp_path / "home"
+    key_file = home / ".config" / "opencode" / ".phoenixgrove-key"
+    key_file.parent.mkdir(parents=True)
+    key_file.write_text("pgs-file-key\n")
+    provider = PhoenixGroveQuotaProvider(home=home, environment={})
+    assert provider.has_local_credentials()
+
+    # A plan-scoped key is denied by /v1/usage without being a dead login;
+    # the backend reports a refresh failure rather than spending a probe.
+    denied = PhoenixGroveQuotaProvider(
+        home=home,
+        fetch_json=lambda _url, _headers: (403, {"error": "plan keys cannot read usage"}),
+        environment={"PHOENIXGROVE_API_KEY": "plan-key"},
+    )
+    try:
+        denied.refresh(datetime(2026, 9, 1, tzinfo=timezone.utc))
+    except RuntimeError as error:
+        # A generic refresh failure, never a "sign in again" verdict: the key
+        # may be a perfectly valid plan-scoped key that /v1/usage denies.
+        assert str(error) == "usage request failed"
+    else:
+        raise AssertionError("expected a refresh failure")
+
+    assert not PhoenixGroveQuotaProvider(home=tmp_path / "empty", environment={}).has_local_credentials()
 
 
 def test_cursor_provider_reads_its_local_state_db_and_maps_monthly_quota(tmp_path):
@@ -940,21 +1223,23 @@ def test_default_quota_providers_roster_is_exact_and_stable():
 
     assert [p.provider_id for p in providers] == [
         "codex", "claude", "cursor", "opencode", "copilot", "grok", "gemini",
+        "kimi", "openrouter", "commandcode", "zai", "phoenixgrove",
         "antigravity", "qwen", "vibe", "hermes", "cline", "pi", "smallcode",
-        "muse", "prime", "dsh", "qoder", "zcode", "kimi", "openai_compat",
+        "muse", "prime", "dsh", "qoder", "zcode", "openai_compat",
     ]
 
     native = [p for p in providers if not isinstance(p, StaticQuotaProvider)]
     assert [type(p) for p in native] == [
         CodexQuotaProvider, ClaudeQuotaProvider, CursorQuotaProvider,
         OpenCodeQuotaProvider, CopilotQuotaProvider, GrokQuotaProvider,
-        GeminiQuotaProvider,
+        GeminiQuotaProvider, KimiQuotaProvider, OpenRouterQuotaProvider,
+        CommandCodeQuotaProvider, ZaiQuotaProvider, PhoenixGroveQuotaProvider,
     ]
 
     statics = {p.provider_id: p for p in providers if isinstance(p, StaticQuotaProvider)}
     assert set(statics) == {
         "antigravity", "qwen", "vibe", "hermes", "cline", "pi", "smallcode",
-        "muse", "prime", "dsh", "qoder", "zcode", "kimi", "openai_compat",
+        "muse", "prime", "dsh", "qoder", "zcode", "openai_compat",
     }
     assert statics["qwen"].display_name == "Qwen CLI"
     assert statics["dsh"].display_name == "DeepSeek Harness"

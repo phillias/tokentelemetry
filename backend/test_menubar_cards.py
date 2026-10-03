@@ -150,6 +150,9 @@ def test_fill_fraction_comes_from_the_same_bar_the_text_menu_shows():
 def test_brand_tints_mirror_the_dashboard_and_fall_back_safely():
     assert cards.agent_color("claude") == (0xF9, 0x73, 0x16)
     assert cards.agent_color("Codex") == (0xA8, 0x55, 0xF7)
+    assert cards.agent_color("openrouter") == (0xFB, 0x71, 0x85)
+    assert cards.agent_color("commandcode") == (0x4A, 0xDE, 0x80)
+    assert cards.agent_color("phoenixgrove") == (0xEF, 0x44, 0x44)
     # An agent added to the backend before this map is a neutral mark, not a crash.
     assert cards.agent_color("brand-new-agent") == cards.AGENT_FALLBACK
     assert cards.agent_color(None) == cards.AGENT_FALLBACK
@@ -167,6 +170,9 @@ def test_every_supported_harness_gets_a_distinct_mark():
     # The whole point: the C-cluster stays separable.
     assert {cards.agent_monogram(a, None) for a in
             ("claude", "codex", "cursor", "copilot", "cline")} == {"CC", "CX", "CU", "CP", "CL"}
+    # New live-quota providers get curated marks too, distinct from the rest.
+    assert {cards.agent_monogram(a, None) for a in
+            ("openrouter", "commandcode", "zai", "phoenixgrove")} == {"OR", "CM", "ZA", "PG"}
 
 
 def test_an_unmapped_agent_still_gets_a_readable_mark():

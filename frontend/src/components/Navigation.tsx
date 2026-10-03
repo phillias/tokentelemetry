@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Folder, BarChart3, Activity, Settings2,
-  PanelLeftOpen, PanelLeftClose, Zap,
+  PanelLeftOpen, PanelLeftClose, Zap, History, Bot,
 } from "lucide-react";
 import { useResource } from "@/lib/api";
 import { ALL_AGENT_KEYS, getAgent } from "@/lib/agents";
@@ -23,6 +23,8 @@ interface NavigationProps {
 
 const LINKS = [
   { name: "Dashboard", href: "/",         icon: LayoutDashboard },
+  { name: "Sessions",  href: "/sessions", icon: History },
+  { name: "Agents",    href: "/agents",   icon: Bot },
   { name: "Projects",  href: "/projects", icon: Folder },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Local Models", href: "/local-models", icon: Zap },

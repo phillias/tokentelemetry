@@ -58,6 +58,11 @@
   /* Kimi's mark is black-on-white, so the var holds the dark-theme tint (a
      light zinc) rather than the literal brand hex; flipped back in light mode. */
   --agent-kimi:        #e4e4e7;
+  --agent-openrouter:   #fb7185;
+  --agent-commandcode:  #4ade80;
+  /* Z.AI shares ZCode's white-on-black sliced-Z treatment. */
+  --agent-zai:           #e4e4e7;
+  --agent-phoenixgrove:  #ef4444;
 
   /* Radii + shadow */
   --tt-radius-sm: 6px;
@@ -110,6 +115,10 @@
   --agent-qoder: #52525b;
   --agent-zcode: #52525b;
   --agent-kimi:  #18181b;
+  --agent-openrouter:   #e11d48;
+  --agent-commandcode:   #15803d;
+  --agent-zai:           #52525b;
+  --agent-phoenixgrove:  #b91c1c;
 
   --tt-shadow-soft:  0 1px 0 rgba(15,23,42,0.02) inset, 0 4px 12px -6px rgba(15,23,42,0.10);
   --tt-shadow-pop:   0 1px 0 rgba(15,23,42,0.03) inset, 0 18px 40px -18px rgba(15,23,42,0.15);

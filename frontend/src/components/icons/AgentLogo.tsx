@@ -45,7 +45,7 @@ export function AgentLogo({ agent, size = 16, decorative = true, className, colo
   // `currentColor` from a container that uses the brand hex would leave them
   // invisible against a background of their own tone.
   const isLightBrand = agent === "grok" || agent === "pi" || agent === "qoder"
-    || agent === "zcode" || agent === "kimi";
+    || agent === "zcode" || agent === "kimi" || agent === "zai";
   const brandColor = isLightBrand ? `var(--agent-${agent})` : meta.hex;
   const applyTint = color || isLightBrand;
   const props = {
@@ -75,6 +75,7 @@ export function AgentLogo({ agent, size = 16, decorative = true, className, colo
     case "cline": return <Cline {...props} />;
     case "qoder": return <Qoder {...props} />;
     case "zcode": return <ZAI {...props} />;
+    case "zai": return <ZAI {...props} />;
     case "kimi": return <Kimi {...props} />;
     default: {
       const Fallback = meta.icon;

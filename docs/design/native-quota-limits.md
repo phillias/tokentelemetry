@@ -38,7 +38,7 @@ access middleware and has no provider-side mutation behavior.
 
 ## Provider Scope
 
-Every agent in `frontend/src/lib/agents.ts` has an entry. Seven have a native account-quota API;
+Every agent in `frontend/src/lib/agents.ts` has an entry. Twelve have a native account-quota API;
 the rest are listed with the reason they do not. `backend/test_quotas.py` asserts the two sets match
 exactly, so adding an agent to the roster without a quota entry fails the suite.
 
@@ -51,6 +51,11 @@ exactly, so adding an agent to the roster without a quota entry fails the suite.
 | GitHub Copilot | editor `apps.json`/`hosts.json`, GitHub CLI `hosts.yml`, or OpenCode's `github-copilot` entry | GitHub Copilot internal user quota |
 | Grok Code Fast | `~/.grok/auth.json` | Grok CLI billing credits |
 | Gemini CLI | `~/.gemini/oauth_creds.json` or `~/.config/gemini/oauth_creds.json` | Google Code Assist user quota |
+| Kimi Code | Pi's `auth.json` `kimi-coding` login (API key or OAuth access token), then the Kimi Code CLI's `credentials/kimi-code.json` | Kimi `GET /coding/v1/usages` |
+| OpenRouter | `OPENROUTER_API_KEY`, OpenCode's `auth.json`, or Pi's `auth.json` | OpenRouter `GET /api/v1/key` spend-cap balance |
+| Command Code | `COMMAND_CODE_API_KEY`, OpenCode's `.command-code.key`, or Pi's `models.json` | Command Code `/alpha/billing/credits`, `/alpha/billing/subscriptions`, `/alpha/usage/summary` |
+| Z.AI | `ZAI_API_KEY` / `BIGMODEL_API_KEY`, or Pi's `auth.json` (zai/zhipu/z.ai/glm aliases) | Z.AI international and BigModel `GET /api/monitor/usage/quota/limit` |
+| Phoenix Grove | `PHOENIXGROVE_API_KEY` / `PGS_API_KEY`, or OpenCode's `.phoenixgrove-key` | Phoenix Grove `GET /v1/usage` |
 
 All credential paths are local-only probes. They are read only immediately before a provider
 request; credentials are neither cached, emitted by the API, nor logged.
@@ -85,7 +90,7 @@ than vendored. No Gemini CLI on the machine means no renewal, and the lapsed ses
 - `backend/test_quotas.py` covers parsing, status reporting, stale-while-revalidate cache behavior,
   and API results.
 - `frontend/src/lib/quotas.ts` owns the API type contract.
-- `frontend/src/components/QuotaOverview.tsx` renders read-only live-allowance cards.
+- `frontend/src/components/quota/PlanLimitsList.tsx` renders read-only live-allowance cards, shared by the sidebar popover and the menu-bar tray so the two surfaces cannot drift.
 
 The backend uses the Python standard library for HTTP so the feature adds no dependency. Blocking
 file and HTTP work runs off FastAPI's event loop.

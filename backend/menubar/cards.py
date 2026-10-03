@@ -207,6 +207,8 @@ AGENT_HEX = {
     "muse": (0x25, 0x63, 0xEB), "prime": (0x84, 0xA3, 0x0C),
     "dsh": (0x4D, 0x6B, 0xFE), "qoder": (0x71, 0x71, 0x7A),
     "kimi": (0x18, 0x18, 0x1B),
+    "openrouter": (0xFB, 0x71, 0x85), "commandcode": (0x4A, 0xDE, 0x80),
+    "zai": (0x71, 0x71, 0x7A), "phoenixgrove": (0xEF, 0x44, 0x44),
 }
 AGENT_FALLBACK = (0x64, 0x74, 0x8B)
 
@@ -225,6 +227,7 @@ AGENT_MARK = {
     "qwen": "QW", "vibe": "VB", "hermes": "HM", "cline": "CL",
     "smallcode": "SC", "pi": "PI", "muse": "MU", "prime": "PR",
     "dsh": "DS", "qoder": "QO", "kimi": "Ki",
+    "openrouter": "OR", "commandcode": "CM", "zai": "ZA", "phoenixgrove": "PG",
 }
 
 

@@ -255,7 +255,7 @@ agree, so the number in the menu bar is the number in the dashboard.
     Session          73% used
     Weekly           89% used
   ──────────────────
-  14 agents with no live quota
+  13 agents with no live quota
   ──────────────────
   Open dashboard
   Refresh now
