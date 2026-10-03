@@ -1,6 +1,21 @@
 {
   "releases": [
     {
+      "tag": "2026-10-03",
+      "title": "Sessions and agents get their own pages",
+      "highlights": [
+        {
+          "title": "Sessions and agents list pages",
+          "description": "The dashboard sidebar now has Sessions and Agents pages: the full session list with search and agent filters, and every detected agent with its session counts, plan-limit quota state, live quota meters, and the experimental feature flags each agent exposes in local config. Links that used to land on a 404 now land here.",
+          "href": "/sessions"
+        },
+        {
+          "title": "Plan limits cover five more providers",
+          "description": "The plan-limits meters now read live quota for Kimi, OpenRouter, Command Code, Z.AI, and Phoenix Grove, alongside the existing providers. Agents without a readable local quota are named on the Agents page with the reason, instead of being folded into a count."
+        }
+      ]
+    },
+    {
       "tag": "2026-09-24",
       "title": "The dashboard in your language",
       "highlights": [

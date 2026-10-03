@@ -1266,6 +1266,602 @@ class GeminiQuotaProvider:
         return QuotaSnapshot(self.provider_id, self.display_name, now, resources, _title(tier))
 
 
+def _pi_agent_dir(home: Path, environment: Any) -> Path:
+    """Pi Coding Agent's state directory, honouring its documented override."""
+    try:
+        configured = environment.get("PI_CODING_AGENT_DIR")
+    except AttributeError:
+        configured = None
+    if isinstance(configured, str) and configured.strip() and configured.strip() != "~":
+        return Path(configured.strip()).expanduser()
+    return home / ".pi" / "agent"
+
+
+def _read_text_key(path: Path) -> Optional[str]:
+    """A single-secret file (no JSON envelope): strip, never log, never keep."""
+    try:
+        key = path.expanduser().read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeDecodeError):
+        return None
+    return key or None
+
+
+class OpenRouterQuotaProvider:
+    """OpenRouter key spend-cap balance via ``GET /api/v1/key``.
+
+    Mirrors quota-axi's openrouter adapter: env key first, then the key
+    OpenCode stores for its OpenRouter integration, then Pi's. A spend cap is
+    a prepaid pool, not a rolling window, so it surfaces as a single USD
+    consumption resource (spent vs cap); ``limit_reset`` is honoured when the
+    API reports one and omitted otherwise.
+    """
+
+    provider_id = "openrouter"
+    display_name = "OpenRouter"
+    sign_in_hint = "The saved OpenRouter key was rejected. Replace it and try again."
+    key_url = "https://openrouter.ai/api/v1/key"
+
+    def __init__(
+        self,
+        home: Optional[Path] = None,
+        fetch_json: FetchJSON = _fetch_json,
+        environment: Optional[Dict[str, str]] = None,
+    ) -> None:
+        self.home = home or Path.home()
+        self.fetch_json = fetch_json
+        self.environment = environment if environment is not None else os.environ
+
+    def _api_key(self) -> Optional[str]:
+        env_key = self.environment.get("OPENROUTER_API_KEY")
+        if isinstance(env_key, str) and env_key.strip():
+            return env_key.strip()
+        for path in (
+            self.home / ".local" / "share" / "opencode" / "auth.json",
+            _pi_agent_dir(self.home, self.environment) / "auth.json",
+        ):
+            try:
+                raw = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            entry = raw.get("openrouter") if isinstance(raw, dict) else None
+            key = entry.get("key") if isinstance(entry, dict) else None
+            if isinstance(key, str) and key.strip():
+                return key.strip()
+        return None
+
+    def has_local_credentials(self) -> bool:
+        return self._api_key() is not None
+
+    def refresh(self, now: datetime) -> QuotaSnapshot:
+        key = self._api_key()
+        if not key:
+            raise RuntimeError(NOT_SIGNED_IN)
+        status, payload = self.fetch_json(self.key_url, {"Authorization": f"Bearer {key}"})
+        if status in (401, 403):
+            raise RuntimeError(LOGIN_REJECTED)
+        if not 200 <= status < 300:
+            raise RuntimeError("usage request failed")
+        data = payload.get("data") if isinstance(payload.get("data"), dict) else payload
+        limit = _number(data.get("limit"))
+        remaining = _number(data.get("limit_remaining"))
+        spent = _number(data.get("usage"))
+        if spent is None and limit is not None and remaining is not None:
+            spent = max(0.0, limit - remaining)
+        resources: Dict[str, QuotaResource] = {}
+        if limit is not None and limit > 0 and spent is not None:
+            resources["balance"] = QuotaResource(
+                kind="consumption", unit="usd", used=max(0.0, spent), limit=limit,
+                resets_at=_date(data.get("limit_reset")),
+            )
+        elif remaining is not None and remaining >= 0:
+            resources["balance"] = QuotaResource(kind="balance", unit="usd", available=remaining)
+        if not resources:
+            raise RuntimeError("invalid response")
+        return QuotaSnapshot(self.provider_id, self.display_name, now, resources)
+
+
+class CommandCodeQuotaProvider:
+    """Command Code (Goat) plan windows via its ``/alpha/*`` billing endpoints.
+
+    Mirrors quota-axi's commandcode adapter: env key, the key file OpenCode
+    writes for its Command Code integration, then Pi's models.json. whoami
+    resolves the org scope; credits carry the 5-hour/weekly windows and the
+    subscription's billing period plus the usage summary size the monthly pool
+    against the plan's documented cap.
+
+    Limitations (commented, not silent): the monthly cap table is quota-axi's
+    curated mapping of plan id to USD pool, so an unknown future plan id means
+    no monthly window rather than a guessed one; and unlike quota-axi this
+    backend never probes chat/completions to classify a usage-denied key,
+    because that probe spends a real completion — a denied usage read reports
+    as a refresh failure instead.
+    """
+
+    provider_id = "commandcode"
+    display_name = "Command Code"
+    sign_in_hint = "The saved Command Code key was rejected. Replace it and try again."
+    base_url = "https://api.commandcode.ai"
+
+    # Curated plan-id to monthly USD pool, mirroring quota-axi. Unknown plan
+    # ids intentionally map to no monthly window rather than a guessed cap.
+    monthly_caps = {
+        "goat": 70,
+        "pro": 80,
+        "max-10x": 150,
+        "max-20x": 300,
+        "go": 10,
+        "team-pro": 40,
+    }
+
+    def __init__(
+        self,
+        home: Optional[Path] = None,
+        fetch_json: FetchJSON = _fetch_json,
+        environment: Optional[Dict[str, str]] = None,
+    ) -> None:
+        self.home = home or Path.home()
+        self.fetch_json = fetch_json
+        self.environment = environment if environment is not None else os.environ
+
+    def _api_key(self) -> Optional[str]:
+        env_key = self.environment.get("COMMAND_CODE_API_KEY")
+        if isinstance(env_key, str) and env_key.strip():
+            return env_key.strip()
+        key = _read_text_key(self.home / ".config" / "opencode" / ".command-code.key")
+        if key:
+            return key
+        try:
+            raw = json.loads((_pi_agent_dir(self.home, self.environment) / "models.json").read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        providers = raw.get("providers") if isinstance(raw, dict) else None
+        entry = providers.get("commandcode") if isinstance(providers, dict) else None
+        key = entry.get("apiKey") if isinstance(entry, dict) else None
+        return key.strip() if isinstance(key, str) and key.strip() else None
+
+    def has_local_credentials(self) -> bool:
+        return self._api_key() is not None
+
+    def _get(self, url: str, headers: Dict[str, str]) -> Optional[Dict[str, Any]]:
+        try:
+            status, payload = self.fetch_json(url, headers)
+        except RuntimeError:
+            return None
+        if status in (401, 403):
+            raise RuntimeError(LOGIN_REJECTED)
+        return payload if 200 <= status < 300 else None
+
+    def refresh(self, now: datetime) -> QuotaSnapshot:
+        key = self._api_key()
+        if not key:
+            raise RuntimeError(NOT_SIGNED_IN)
+        headers = {"Authorization": f"Bearer {key}"}
+        whoami = self._get(f"{self.base_url}/alpha/whoami", headers) or {}
+        org = whoami.get("org") if isinstance(whoami.get("org"), dict) else {}
+        org_id = org.get("id") if isinstance(org.get("id"), str) else whoami.get("orgId")
+        scope = f"?orgId={org_id}" if isinstance(org_id, str) and org_id else ""
+        credits = self._get(f"{self.base_url}/alpha/billing/credits{scope}", headers)
+        subscription = self._get(f"{self.base_url}/alpha/billing/subscriptions{scope}", headers)
+        if credits is None and subscription is None:
+            raise RuntimeError("usage request failed")
+
+        resources: Dict[str, QuotaResource] = {}
+        if isinstance(credits, dict):
+            limits = credits.get("windowLimits") or credits.get("window_limits")
+            if isinstance(limits, dict):
+                for source, name, seconds in (
+                    ("fiveHour", "session", 18_000), ("five_hour", "session", 18_000),
+                    ("weekly", "weekly", 604_800),
+                ):
+                    window = limits.get(source)
+                    if not isinstance(window, dict) or name in resources:
+                        continue
+                    cap = _number(window.get("cap") if window.get("cap") is not None else window.get("limit"))
+                    used = _number(window.get("used") if window.get("used") is not None else window.get("usedUsd"))
+                    if cap is not None and used is not None and cap > 0:
+                        resources[name] = QuotaResource(
+                            kind="consumption", unit="usd", used=max(0.0, used), limit=cap,
+                            resets_at=_date(window.get("resetAt") or window.get("resetsAt")),
+                            window_seconds=float(seconds),
+                        )
+
+        sub = subscription.get("data") if isinstance(subscription, dict) and isinstance(subscription.get("data"), dict) else subscription
+        plan_id = sub.get("planId") if isinstance(sub, dict) else None
+        plan_id = plan_id or (whoami.get("planId") if isinstance(whoami.get("planId"), str) else None)
+        if isinstance(sub, dict) and isinstance(sub.get("currentPeriodStart"), str):
+            query = f"?{f'orgId={org_id}&' if scope else ''}since={sub['currentPeriodStart']}"
+            summary = self._get(f"{self.base_url}/alpha/usage/summary{query}", headers)
+            spend = None
+            if isinstance(summary, dict):
+                spend = _number(summary.get("totalMonthlyCredits"))
+                if spend is None:
+                    spend = _number(summary.get("totalCost"))
+            cap = None
+            if isinstance(plan_id, str):
+                match = re.search(r"individual-(goat|pro|max-10x|max-20x|go|team-pro)", plan_id, re.IGNORECASE)
+                if match:
+                    cap = self.monthly_caps.get(match.group(1).lower())
+            if spend is not None and cap:
+                resources["monthly"] = QuotaResource(
+                    kind="consumption", unit="usd", used=max(0.0, spend), limit=cap,
+                    resets_at=_date(sub.get("currentPeriodEnd")),
+                    window_seconds=float(30 * 24 * 60 * 60),
+                )
+        if not resources:
+            raise RuntimeError("invalid response")
+        return QuotaSnapshot(
+            self.provider_id, self.display_name, now, resources,
+            _title(plan_id) if isinstance(plan_id, str) else None,
+        )
+
+
+class ZaiQuotaProvider:
+    """Z.AI (Zhipu) token/credit windows via its usage-quota endpoints.
+
+    Mirrors quota-axi's zai adapter: env keys (international or BigModel),
+    then Pi's auth entry. The international endpoint is tried first with the
+    BigModel (open.bigmodel.cn) endpoint as fallback — whichever answers a
+    parseable quota body wins, exactly like quota-axi. Only TOKENS_LIMIT /
+    CREDIT_LIMIT rows bound credit consumption; RATE_LIMIT concurrency and
+    TIMES_LIMIT rows are informational and intentionally skipped.
+    """
+
+    provider_id = "zai"
+    display_name = "Z.AI"
+    sign_in_hint = "The saved Z.AI key was rejected. Replace it and try again."
+    usage_urls = (
+        "https://api.z.ai/api/monitor/usage/quota/limit",
+        "https://open.bigmodel.cn/api/monitor/usage/quota/limit",
+    )
+
+    def __init__(
+        self,
+        home: Optional[Path] = None,
+        fetch_json: FetchJSON = _fetch_json,
+        environment: Optional[Dict[str, str]] = None,
+    ) -> None:
+        self.home = home or Path.home()
+        self.fetch_json = fetch_json
+        self.environment = environment if environment is not None else os.environ
+
+    def _api_key(self) -> Optional[str]:
+        for var in ("ZAI_API_KEY", "BIGMODEL_API_KEY"):
+            value = self.environment.get(var)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+        try:
+            raw = json.loads((_pi_agent_dir(self.home, self.environment) / "auth.json").read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        if not isinstance(raw, dict):
+            return None
+        for alias in ("zai", "zhipu", "z.ai", "glm"):
+            entry = raw.get(alias)
+            key = entry.get("key") if isinstance(entry, dict) else None
+            if isinstance(key, str) and key.strip():
+                return key.strip()
+        return None
+
+    def has_local_credentials(self) -> bool:
+        return self._api_key() is not None
+
+    def refresh(self, now: datetime) -> QuotaSnapshot:
+        key = self._api_key()
+        if not key:
+            raise RuntimeError(NOT_SIGNED_IN)
+        headers = {"Authorization": f"Bearer {key}"}
+        payload: Optional[Dict[str, Any]] = None
+        for url in self.usage_urls:
+            try:
+                status, body = self.fetch_json(url, headers)
+            except RuntimeError:
+                continue
+            if status in (401, 403):
+                raise RuntimeError(LOGIN_REJECTED)
+            if 200 <= status < 300:
+                payload = body
+                break
+        if payload is None:
+            raise RuntimeError("usage request failed")
+        data = payload.get("data") if isinstance(payload.get("data"), dict) else payload
+        limits = data.get("limits") if isinstance(data, dict) else None
+        if not isinstance(limits, list):
+            raise RuntimeError("invalid response")
+        resources: Dict[str, QuotaResource] = {}
+        for entry in limits:
+            if not isinstance(entry, dict):
+                continue
+            kind = entry.get("type")
+            if not isinstance(kind, str) or kind.upper() not in ("TOKENS_LIMIT", "CREDIT_LIMIT"):
+                continue
+            percent = _number(entry.get("percentage"))
+            if percent is None:
+                used_value = _number(entry.get("currentValue"))
+                total = _number(entry.get("usage"))
+                if used_value is not None and total:
+                    percent = (100.0 * used_value) / total
+            if percent is None:
+                continue
+            # unit 3 + number 5 is the rolling 5-hour window, unit 6 + number 1
+            # is the weekly window (quota-axi's reading of the same rows).
+            unit, number = _number(entry.get("unit")), _number(entry.get("number"))
+            name = seconds = None
+            if unit == 3 and number == 5:
+                name, seconds = "session", 18_000
+            elif unit == 6 and number == 1:
+                name, seconds = "weekly", 604_800
+            if name is None or name in resources:
+                continue
+            resources[name] = QuotaResource(
+                kind="consumption", unit="percent",
+                used=min(100.0, max(0.0, percent)), limit=100,
+                resets_at=_date(entry.get("nextResetTime") or entry.get("resetTime")),
+                window_seconds=float(seconds),
+            )
+        if not resources:
+            raise RuntimeError("invalid response")
+        level = data.get("level") if isinstance(data, dict) else None
+        return QuotaSnapshot(
+            self.provider_id, self.display_name, now, resources,
+            _title(level) if isinstance(level, str) and level.lower() != "unknown" else None,
+        )
+
+
+class KimiQuotaProvider:
+    """Kimi (Moonshot) coding-plan windows via ``GET /coding/v1/usages``.
+
+    Mirrors quota-axi's kimi adapter: Pi's ``kimi-coding`` login first (a
+    literal API key, or the OAuth access token Pi received — read in place,
+    never refreshed, because refreshing would mutate Pi's auth state), then
+    the Kimi Code CLI's own access token. The top-level ``usage`` block is
+    the weekly pool; ``limits[]`` entries whose window resolves to exactly 5
+    hours become the session window. Month-length windows are skipped: their
+    second count varies by calendar month, so a fixed window_seconds would be
+    a lie the dashboard would render as precision.
+    """
+
+    provider_id = "kimi"
+    display_name = "Kimi Code"
+    sign_in_hint = "Kimi's saved login has expired. Sign in to Kimi again."
+    usage_url = "https://api.kimi.com/coding/v1/usages"
+    unit_seconds = {"second": 1, "minute": 60, "hour": 3600, "day": 86400, "week": 604800}
+
+    def __init__(
+        self,
+        home: Optional[Path] = None,
+        fetch_json: FetchJSON = _fetch_json,
+        environment: Optional[Dict[str, str]] = None,
+    ) -> None:
+        self.home = home or Path.home()
+        self.fetch_json = fetch_json
+        self.environment = environment if environment is not None else os.environ
+
+    def _kimi_code_home(self) -> Path:
+        configured = self.environment.get("KIMI_CODE_HOME")
+        if isinstance(configured, str) and configured.strip():
+            return Path(configured.strip()).expanduser()
+        return self.home / ".kimi-code"
+
+    def _api_key(self) -> Optional[str]:
+        try:
+            raw = json.loads((_pi_agent_dir(self.home, self.environment) / "auth.json").read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            raw = None
+        entry = raw.get("kimi-coding") if isinstance(raw, dict) else None
+        if isinstance(entry, dict):
+            kind = entry.get("type")
+            if isinstance(kind, str) and kind.lower() == "api_key":
+                key = entry.get("key")
+            else:
+                key = entry.get("access")
+            if isinstance(key, str) and key.strip():
+                return key.strip()
+        try:
+            cli = json.loads((self._kimi_code_home() / "credentials" / "kimi-code.json").read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        token = cli.get("access_token") if isinstance(cli, dict) else None
+        return token.strip() if isinstance(token, str) and token.strip() else None
+
+    def has_local_credentials(self) -> bool:
+        return self._api_key() is not None
+
+    @classmethod
+    def _detail_percent(cls, detail: Any) -> Optional[float]:
+        if not isinstance(detail, dict):
+            return None
+        limit = _number(detail.get("limit"))
+        if limit is None or limit <= 0:
+            return None
+        used = _number(detail.get("used"))
+        if used is None:
+            remaining = _number(detail.get("remaining"))
+            if remaining is None:
+                return None
+            used = max(0.0, limit - remaining)
+        return min(100.0, max(0.0, (used / limit) * 100))
+
+    @classmethod
+    def _window_seconds(cls, window: Any) -> Optional[float]:
+        if not isinstance(window, dict) or not isinstance(window.get("timeUnit"), str):
+            return None
+        multiplier = cls.unit_seconds.get(window["timeUnit"].lower())
+        duration = _number(window.get("duration"))
+        if multiplier is None or duration is None or duration <= 0:
+            return None
+        return duration * multiplier
+
+    def refresh(self, now: datetime) -> QuotaSnapshot:
+        key = self._api_key()
+        if not key:
+            raise RuntimeError(NOT_SIGNED_IN)
+        try:
+            status, payload = self.fetch_json(self.usage_url, {"Authorization": f"Bearer {key}"})
+        except RuntimeError:
+            raise RuntimeError("usage request failed")
+        if status in (401, 403):
+            raise RuntimeError(LOGIN_REJECTED)
+        if not 200 <= status < 300:
+            raise RuntimeError("usage request failed")
+        resources: Dict[str, QuotaResource] = {}
+        principal = self._detail_percent(payload.get("usage"))
+        if principal is not None:
+            usage = payload.get("usage") if isinstance(payload.get("usage"), dict) else {}
+            resources["weekly"] = QuotaResource(
+                kind="consumption", unit="percent", used=principal, limit=100,
+                resets_at=_date(usage.get("resetTime") or usage.get("resetAt")),
+                window_seconds=float(7 * 24 * 60 * 60),
+            )
+        limits = payload.get("limits")
+        if isinstance(limits, list):
+            for entry in limits:
+                if not isinstance(entry, dict):
+                    continue
+                detail = entry.get("detail")
+                percent = self._detail_percent(detail)
+                seconds = self._window_seconds(entry.get("window"))
+                if percent is None or seconds is None:
+                    continue
+                name = "session" if seconds == 18_000 else "weekly" if seconds == 604_800 else None
+                if name is None or name in resources:
+                    continue
+                resets = detail.get("resetTime") or detail.get("resetAt") if isinstance(detail, dict) else None
+                resources[name] = QuotaResource(
+                    kind="consumption", unit="percent", used=percent, limit=100,
+                    resets_at=_date(resets), window_seconds=float(seconds),
+                )
+        if not resources:
+            raise RuntimeError("invalid response")
+        return QuotaSnapshot(self.provider_id, self.display_name, now, resources)
+
+
+class PhoenixGroveQuotaProvider:
+    """Phoenix Grove (PGS) usage via ``GET /v1/usage``.
+
+    Mirrors quota-axi's phoenixgrove adapter: env keys, then the key file
+    OpenCode writes for its PGS integration. The response envelope is
+    undocumented, so normalization stays tolerant — a top-level, ``data``-
+    or ``usage``-nested object, percent either explicit or derived from
+    used/cap — and an unrecognized body reports "invalid response" instead of
+    inventing a window.
+
+    Limitation (commented, not silent): plan-scoped keys are rejected by
+    /v1/usage while still authorizing chat. quota-axi tells those apart with
+    a live chat-completions probe, but that probe spends a real completion,
+    so this backend reports the denial as a refresh failure instead.
+    """
+
+    provider_id = "phoenixgrove"
+    display_name = "Phoenix Grove"
+    sign_in_hint = "The saved Phoenix Grove key was rejected. Replace it and try again."
+    usage_url = "https://api.pgsgrove.com/v1/usage"
+
+    def __init__(
+        self,
+        home: Optional[Path] = None,
+        fetch_json: FetchJSON = _fetch_json,
+        environment: Optional[Dict[str, str]] = None,
+    ) -> None:
+        self.home = home or Path.home()
+        self.fetch_json = fetch_json
+        self.environment = environment if environment is not None else os.environ
+
+    def _api_key(self) -> Optional[str]:
+        for var in ("PHOENIXGROVE_API_KEY", "PGS_API_KEY"):
+            value = self.environment.get(var)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+        return _read_text_key(self.home / ".config" / "opencode" / ".phoenixgrove-key")
+
+    def has_local_credentials(self) -> bool:
+        return self._api_key() is not None
+
+    @classmethod
+    def _percent(cls, entry: Dict[str, Any]) -> Optional[float]:
+        for field in ("percent", "percentage", "usedPercent"):
+            percent = _number(entry.get(field))
+            if percent is not None:
+                return min(100.0, max(0.0, percent))
+        used = _number(entry.get("used"))
+        cap = _number(entry.get("cap") if entry.get("cap") is not None else entry.get("limit"))
+        if used is not None and cap is not None and cap > 0:
+            return min(100.0, max(0.0, (100.0 * used) / cap))
+        return None
+
+    @classmethod
+    def _window(cls, entry: Any, name: str, seconds: Optional[float]) -> Optional[QuotaResource]:
+        if not isinstance(entry, dict):
+            return None
+        percent = cls._percent(entry)
+        if percent is None:
+            return None
+        resets = entry.get("resetsAt") or entry.get("resetAt") or entry.get("nextResetTime")
+        if isinstance(resets, (int, float)):
+            resets = resets / 1000 if resets <= 10_000_000_000 else resets
+        return QuotaResource(
+            kind="consumption", unit="percent", used=percent, limit=100,
+            resets_at=_date(resets),
+            window_seconds=float(seconds) if seconds is not None else None,
+        )
+
+    def refresh(self, now: datetime) -> QuotaSnapshot:
+        key = self._api_key()
+        if not key:
+            raise RuntimeError(NOT_SIGNED_IN)
+        try:
+            status, payload = self.fetch_json(self.usage_url, {"Authorization": f"Bearer {key}"})
+        except RuntimeError:
+            raise RuntimeError("usage request failed")
+        if status == 401:
+            raise RuntimeError(LOGIN_REJECTED)
+        if status == 403:
+            # Deliberately NOT LOGIN_REJECTED: plan-scoped keys are denied by
+            # /v1/usage while still authorizing chat, so a 403 here does not
+            # prove a dead login — only the (spending) chat probe could tell.
+            raise RuntimeError("usage request failed")
+        if not 200 <= status < 300:
+            raise RuntimeError("usage request failed")
+        data = payload.get("data") if isinstance(payload.get("data"), dict) else None
+        if data is None:
+            data = payload.get("usage") if isinstance(payload.get("usage"), dict) else payload
+        if not isinstance(data, dict):
+            raise RuntimeError("invalid response")
+        gauge = data.get("usage") if isinstance(data.get("usage"), dict) else data
+        resources: Dict[str, QuotaResource] = {}
+        session = self._window(
+            data.get("window") or data.get("current") or gauge, "session", 18_000)
+        if session is not None:
+            resources["session"] = session
+        named = data.get("windows") if isinstance(data.get("windows"), dict) else {}
+        weekly = self._window(
+            named.get("fiveHour") or named.get("five_hour") or named.get("weekly")
+            or named.get("week") or data.get("week") or data.get("weekly"),
+            "weekly", 604_800)
+        # A five-hour entry nested under windows must not clobber the gauge's
+        # session window already recorded above.
+        five_hour = self._window(named.get("fiveHour") or named.get("five_hour"), "session", 18_000)
+        if five_hour is not None and "session" not in resources:
+            resources["session"] = five_hour
+        if weekly is not None:
+            resources["weekly"] = weekly
+        bank = data.get("bank") or data.get("usageBank") or data.get("usage_bank")
+        if isinstance(bank, dict):
+            remaining = _number(bank.get("remaining") or bank.get("balance"))
+            if remaining is not None:
+                resources["bank"] = QuotaResource(kind="balance", unit="credits", available=max(0.0, remaining))
+            else:
+                bank_window = self._window(bank, "bank", None)
+                if bank_window is not None:
+                    resources["bank"] = bank_window
+        plan = data.get("plan") or data.get("tier") or data.get("planId")
+        if not resources:
+            raise RuntimeError("invalid response")
+        return QuotaSnapshot(
+            self.provider_id, self.display_name, now, resources,
+            _title(plan) if isinstance(plan, str) else None,
+        )
+
+
 class StaticQuotaProvider:
     """An explicitly visible harness with no safe native quota source yet."""
 
@@ -1468,6 +2064,11 @@ def default_quota_providers() -> List[QuotaProvider]:
         CopilotQuotaProvider(),
         GrokQuotaProvider(),
         GeminiQuotaProvider(),
+        KimiQuotaProvider(),
+        OpenRouterQuotaProvider(),
+        CommandCodeQuotaProvider(),
+        ZaiQuotaProvider(),
+        PhoenixGroveQuotaProvider(),
         StaticQuotaProvider("antigravity", "Antigravity", "Antigravity keeps its plan and usage state server-side; nothing local reports it."),
         StaticQuotaProvider("qwen", "Qwen CLI", "Qwen's OAuth free tier was discontinued and its Coding Plan key exposes no account-quota endpoint."),
         StaticQuotaProvider("vibe", "Vibe", "Vibe routes to configured model providers, so it has no account quota of its own."),
@@ -1480,6 +2081,5 @@ def default_quota_providers() -> List[QuotaProvider]:
         StaticQuotaProvider("dsh", "DeepSeek Harness", "The DeepSeek harness bills per API key; usage belongs to that key's own account page."),
         StaticQuotaProvider("qoder", "Qoder", "Qoder keeps its plan and usage state server-side; nothing local reports it."),
         StaticQuotaProvider("zcode", "ZCode", "ZCode keeps its coding-plan usage in the Z.ai account API; nothing local reports it."),
-        StaticQuotaProvider("kimi", "Kimi Code", "Kimi Code keeps its membership usage allowance server-side; nothing local reports it."),
         StaticQuotaProvider("openai_compat", "OpenAI-compatible server", "This is a user-configured endpoint, so quota belongs to that provider's own account API."),
     ]
