@@ -16,3 +16,15 @@ Muse Code reads this file as project rules when it runs in this directory.
 - `docs/`: Project docs.
 - `.github/`: GitHub workflow and issue files.
 See .claude/CLAUDE.md for core project rules
+
+## Cross-surface parity
+
+- Quota provider ids must exactly match the agent roster: `backend/quotas.py` `default_quota_providers()` ↔ `frontend/src/lib/agents.ts` `AGENTS` (enforced by `test_every_supported_agent_has_a_quota_entry`). Add both sides together.
+- `/sessions` and `/agents` serve both the Next.js list pages (browser `Accept: text/html`) and the JSON data endpoints (same-origin fetch) behind the split proxy; keep page and data shapes independent.
+
+## Maintaining this file
+
+Keep this file for knowledge useful to almost every future agent session in this project.
+Do not repeat what the codebase already shows; point to the authoritative file or command instead.
+Prefer rewriting or pruning existing entries over appending new ones.
+When updating this file, preserve this bar for all agents and keep entries concise.
