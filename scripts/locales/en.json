@@ -428,7 +428,7 @@
   "One-time setup",
   "Configuration",
   "Update checks",
-  "auto-sync 15s",
+  "auto-sync 60s",
   "Limit reached",
   "Remote Access",
   "Send feedback",

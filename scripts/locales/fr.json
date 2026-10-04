@@ -428,7 +428,7 @@
   "One-time setup": "Configuration unique",
   "Configuration": "Configuration",
   "Update checks": "Vérification des mises à jour",
-  "auto-sync 15s": "synchro auto 15 s",
+  "auto-sync 60s": "synchro auto 60 s",
   "Limit reached": "Limite atteinte",
   "Remote Access": "Accès à distance",
   "Send feedback": "Envoyer un commentaire",

@@ -438,7 +438,7 @@ const phrases: Record<string, string> = {
   "One-time setup": "一次性设置",
   "Configuration": "配置",
   "Update checks": "更新检查",
-  "auto-sync 15s": "自动同步 15 秒",
+  "auto-sync 60s": "自动同步 60 秒",
   "Limit reached": "已达上限",
   "Remote Access": "远程访问",
   "Send feedback": "发送反馈",

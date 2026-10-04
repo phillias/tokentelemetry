@@ -428,7 +428,7 @@
   "One-time setup": "1회성 설정",
   "Configuration": "구성",
   "Update checks": "업데이트 확인",
-  "auto-sync 15s": "자동 동기화 15초",
+  "auto-sync 60s": "자동 동기화 60초",
   "Limit reached": "한도 도달",
   "Remote Access": "원격 접근",
   "Send feedback": "피드백 보내기",
