@@ -10,6 +10,7 @@ import {
   Kanban,
 } from "lucide-react";
 import { useResource } from "@/lib/api";
+import { SESSIONS_SUMMARY_PATH, SESSIONS_LIST_POLL_MS } from "@/lib/sessionsFeed";
 import { useScrollState } from "@/lib/useScrollState";
 import {
   PageHeader, Card, CardHeader, CardTitle, StatTile, EmptyState, Section,
@@ -69,7 +70,7 @@ interface Session {
 
 export default function HermesPage() {
   const pathname = usePathname();
-  const sessionsRes = useResource<Session[]>("/sessions", { pollMs: 15_000, initial: [] });
+  const sessionsRes = useResource<Session[]>(SESSIONS_SUMMARY_PATH, { pollMs: SESSIONS_LIST_POLL_MS, initial: [] });
   const overviewRes = useResource<Overview>("/hermes/overview", { pollMs: 30_000 });
   const profilesRes = useResource<{ profiles: { name: string }[] }>("/hermes/profiles", { pollMs: 60_000 });
   const gateway = overviewRes.data?.gateway;

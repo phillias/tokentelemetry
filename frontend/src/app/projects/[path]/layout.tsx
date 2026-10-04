@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import { useResource } from "@/lib/api";
+import { SESSIONS_SUMMARY_PATH } from "@/lib/sessionsFeed";
 import { cn } from "@/lib/cn";
 import { formatCost, formatTokens } from "@/lib/format";
 import { Card, AgentBadge } from "@/components/ui";
@@ -33,7 +34,7 @@ export default function ProjectShellLayout({ children }: { children: React.React
   const { data: projectsList = [], loading: projectsLoading } =
     useResource<ProjectData[]>("/projects", { initial: [] });
   const { data: allSessions = [], loading: sessionsLoading } =
-    useResource<SessionRow[]>("/sessions", { initial: [] });
+    useResource<SessionRow[]>(SESSIONS_SUMMARY_PATH, { initial: [] });
   const { data: budgetData } =
     useResource<{ budgets: BudgetStatus[] }>("/budgets", { initial: undefined, pollMs: 60_000 });
   const budgets = budgetData?.budgets ?? [];

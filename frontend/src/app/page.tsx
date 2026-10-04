@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { useResource } from "@/lib/api";
+import { SESSIONS_SUMMARY_PATH, SESSIONS_LIST_POLL_MS } from "@/lib/sessionsFeed";
 import { useScrollState } from "@/lib/useScrollState";
 import { trackEvent } from "@/lib/telemetry";
 import { AGENTS, getAgent, type AgentKey } from "@/lib/agents";
@@ -60,7 +61,7 @@ interface AnalyticsResponse {
 
 export default function Home() {
   const pathname = usePathname();
-  const sessionsRes = useResource<Session[]>("/sessions", { pollMs: 15_000, initial: [] });
+  const sessionsRes = useResource<Session[]>(SESSIONS_SUMMARY_PATH, { pollMs: SESSIONS_LIST_POLL_MS, initial: [] });
   const agentsRes   = useResource<string[]>("/agents", { pollMs: 30_000, initial: [] });
   const analyticsRes = useResource<AnalyticsResponse>("/analytics", { pollMs: 30_000 });
   const billingRes  = useResource<BillingConfig>("/config/billing", { pollMs: 60_000 });
@@ -320,7 +321,7 @@ export default function Home() {
               ) : null}
               <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--tt-fg-dim)]">
                 <Radio size={10} className="text-emerald-400" />
-                auto-sync 15s
+                auto-sync 60s
               </div>
             </div>
           </div>

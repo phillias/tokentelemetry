@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { History, Search } from "lucide-react";
 
 import { useResource } from "@/lib/api";
+import { SESSIONS_SUMMARY_PATH, SESSIONS_LIST_POLL_MS } from "@/lib/sessionsFeed";
 import { getAgent } from "@/lib/agents";
 import { AgentLogo } from "@/components/icons/AgentLogo";
 import { projectBasename } from "@/lib/paths";
@@ -36,7 +37,7 @@ function sessionTime(iso: string): { time: string; day: string } {
 
 export default function SessionsPage() {
   const pathname = usePathname();
-  const { data, loading } = useResource<Session[]>("/sessions", { pollMs: 15_000, initial: [] });
+  const { data, loading } = useResource<Session[]>(SESSIONS_SUMMARY_PATH, { pollMs: SESSIONS_LIST_POLL_MS, initial: [] });
   const [query, setQuery] = useState("");
   const [selAgents, setSelAgents] = useState<string[]>([]);
 
@@ -201,7 +202,7 @@ export default function SessionsPage() {
       </Card>
 
       <p className="text-[11px] text-[var(--tt-fg-faint)]">
-        Showing {filtered.length.toLocaleString()} of {sessions.length.toLocaleString()} sessions · auto-sync 15s
+        Showing {filtered.length.toLocaleString()} of {sessions.length.toLocaleString()} sessions · auto-sync 60s
       </p>
     </div>
   );
