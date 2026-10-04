@@ -9,8 +9,12 @@ import { useEffect, useState } from "react";
 // the URL. Falls back to loopback during SSR, where window is unavailable.
 export const API_BASE = (() => {
   const explicit = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "");
+  // NOTE (fork): keep the null-check (not truthiness) so a same-origin build
+  // with NEXT_PUBLIC_API_BASE="" inlines "" and returns it. Upstream's
+  // `if (explicit)` treated "" as unset and fell through to port derivation.
   if (explicit !== undefined && explicit !== null) return explicit;
-  const port = process.env.NEXT_PUBLIC_API_PORT || "8000";
+  // Converged with upstream #407: default API port is now 18000 on both sides.
+  const port = process.env.NEXT_PUBLIC_API_PORT || "18000";
   if (typeof window !== "undefined") {
     return `${window.location.protocol}//${window.location.hostname}:${port}`;
   }
