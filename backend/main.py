@@ -9457,7 +9457,7 @@ def _get_sessions_lock() -> _asyncio.Lock:
 
 # Slim projection for the polling list feed (dashboard, sessions list, agents,
 # Hermes pages): exactly the row fields those pages render. The session detail
-# page keeps the default full view. Mirrors _HERMES_SESSION_PUBLIC_FIELDS.
+# page keeps the default full view. Superset of _HERMES_SESSION_PUBLIC_FIELDS.
 _SESSION_SUMMARY_FIELDS = (
     "id", "agent", "project", "timestamp", "display", "text",
     "tokens", "cost", "model", "provider",

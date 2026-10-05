@@ -22,9 +22,9 @@ At the top of the dashboard are four KPI cards updated on every refresh:
 | **Projects** | Number of distinct working directories |
 | **API-equivalent cost** | Dollar estimate based on current model pricing |
 
-## Live 15-second sync
+## Live sync
 
-The dashboard polls the backend every 15 seconds. If an agent is actively running you'll see token counts increment in near-real-time without a manual refresh.
+The dashboard polls the backend continuously: session figures (the KPI strip and activity feed) refresh every 60 seconds, while the detected-agent list and analytics refresh every 30. If an agent is actively running you'll see token counts increment without a manual refresh.
 
 ## Coding vs autonomous agent split
 
