@@ -437,7 +437,7 @@ const phrases: Record<string, string> = {
   "Show raw error": "Afficher l'erreur brute",
   "One-time setup": "Configuration unique",
   "Update checks": "Vérification des mises à jour",
-  "auto-sync 15s": "synchro auto 15 s",
+  "auto-sync 60s": "synchro auto 60 s",
   "Limit reached": "Limite atteinte",
   "Remote Access": "Accès à distance",
   "Send feedback": "Envoyer un commentaire",

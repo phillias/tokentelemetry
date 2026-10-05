@@ -9435,7 +9435,16 @@ _log = _logging.getLogger("tokentelemetry.cache")
 
 SESSIONS_TTL_SEC = 30.0
 
-_sessions_cache: Dict[str, Any] = {"data": None, "at": 0.0, "building": False}
+# A scan that never finishes must not wedge the endpoint forever: when a build
+# runs longer than this, the next stale-while-revalidate hit abandons it and
+# starts a replacement. The orphaned worker still publishes when it lands
+# (valid data, just late) — guarded so it never overwrites a newer publish.
+_SESSIONS_BUILD_TIMEOUT_SEC = 300.0
+
+_sessions_cache: Dict[str, Any] = {
+    "data": None, "at": 0.0, "building": False,
+    "build_started": 0.0, "last_error": None,
+}
 _sessions_lock: Optional[_asyncio.Lock] = None  # lazy-init inside event loop
 
 
@@ -9444,6 +9453,92 @@ def _get_sessions_lock() -> _asyncio.Lock:
     if _sessions_lock is None:
         _sessions_lock = _asyncio.Lock()
     return _sessions_lock
+
+
+# Slim projection for the polling list feed (dashboard, sessions list, agents,
+# Hermes pages): exactly the row fields those pages render. The session detail
+# page keeps the default full view. Superset of _HERMES_SESSION_PUBLIC_FIELDS.
+_SESSION_SUMMARY_FIELDS = (
+    "id", "agent", "project", "timestamp", "display", "text",
+    "tokens", "cost", "model", "provider",
+    "copilot_source", "antigravity_source", "source_subtype",
+    "hermes_profile", "parent_session_id",
+    "project_inferred", "cost_anomaly",
+)
+
+
+def _session_summary_view(session: Dict[str, Any]) -> Dict[str, Any]:
+    """Return only the session-list fields consumed by the polling list feed."""
+    return {field: session[field] for field in _SESSION_SUMMARY_FIELDS if field in session}
+
+
+def _sessions_build_stuck(now: float) -> bool:
+    """True when a scan has been building far longer than any healthy scan."""
+    return bool(_sessions_cache.get("building")) and (
+        now - _sessions_cache.get("build_started", 0.0) > _SESSIONS_BUILD_TIMEOUT_SEC
+    )
+
+
+async def _refresh_sessions(*, force: bool) -> List[Dict[str, Any]]:
+    """Run one scan under the single-flight lock and publish it.
+
+    With force=False an earlier waiter that just published while we queued
+    satisfies us — this collapses cold-start stampedes onto one scan. With
+    force=True (explicit ?fresh=1) we always re-scan, preserving the
+    manual-refresh contract.
+    """
+    queued_at = _time.monotonic()
+    lock = _get_sessions_lock()
+    async with lock:
+        if (
+            not force
+            and _sessions_cache.get("data") is not None
+            and _sessions_cache.get("at", 0.0) >= queued_at
+        ):
+            _sessions_cache["building"] = False
+            return _sessions_cache["data"]
+        _sessions_cache["building"] = True
+        _sessions_cache["build_started"] = queued_at
+        scan_began = _time.monotonic()
+        try:
+            t0 = scan_began
+            data = await _asyncio.to_thread(_scan_sessions_sync)
+            # A newer publish may have landed while we scanned (abandoned
+            # orphan vs replacement, or a forced refresh). Ours started
+            # earlier so its view of disk is older — keep the newer one.
+            if (
+                _sessions_cache.get("data") is not None
+                and _sessions_cache.get("at", 0.0) > scan_began
+            ):
+                return _sessions_cache["data"]
+            _sessions_cache["data"] = data
+            _sessions_cache["at"] = _time.monotonic()
+            _sessions_cache["last_error"] = None
+            _log.info("sessions scan: %d entries in %.0fms", len(data), (_time.monotonic() - t0) * 1000)
+            _report_harness_scan(data)
+            # Durable rollup: persist a tiny summary of each session so history
+            # outlives the agents' own transcript pruning. Fire-and-forget on a
+            # worker thread — a store failure must never break a request, and the
+            # write must not add latency to this scan.
+            _persist_history_async(data)
+        except Exception as e:
+            _log.exception("sessions scan failed: %s", e)
+            _sessions_cache["last_error"] = f"{type(e).__name__}: {e}"
+            # If we have a previous value, keep serving it rather than 500-ing.
+            if _sessions_cache.get("data") is not None:
+                return _sessions_cache["data"]
+            raise
+        finally:
+            _sessions_cache["building"] = False
+        return _sessions_cache["data"]
+
+
+async def _refresh_sessions_quiet() -> None:
+    """Background-refresh wrapper: never let an exception escape into the task."""
+    try:
+        await _refresh_sessions(force=False)
+    except Exception:
+        _log.exception("background sessions refresh failed")
 
 
 def _archive_opted_in_transcripts(data: List[Dict[str, Any]]) -> None:
@@ -9558,51 +9653,49 @@ async def get_sessions_cached(fresh: bool = False) -> List[Dict[str, Any]]:
     - TTL is SESSIONS_TTL_SEC (default 30s).
     - Scans run in a worker thread so the async event loop stays responsive.
     - Single-flight: concurrent callers share one scan via an asyncio.Lock.
-    - `fresh=True` forces a re-scan.
+    - `fresh=True` forces a re-scan and waits for it (manual refresh).
+    - Stale-while-revalidate: once a snapshot exists it is served immediately
+      even past TTL, with the re-scan kicked off in the background. List
+      feeds stay sub-second while a slow (or wedged) scan runs instead of
+      queueing every poller behind the single-flight lock.
     """
+    if fresh:
+        return await _refresh_sessions(force=True)
     now = _time.monotonic()
     cached = _sessions_cache.get("data")
-    age = now - _sessions_cache.get("at", 0.0)
-    if not fresh and cached is not None and age < SESSIONS_TTL_SEC:
-        return cached
-
-    lock = _get_sessions_lock()
-    async with lock:
-        # Double-check: another waiter may have just refreshed the cache.
-        now = _time.monotonic()
-        cached = _sessions_cache.get("data")
-        age = now - _sessions_cache.get("at", 0.0)
-        if not fresh and cached is not None and age < SESSIONS_TTL_SEC:
+    if cached is not None:
+        if now - _sessions_cache.get("at", 0.0) < SESSIONS_TTL_SEC:
             return cached
-
-        _sessions_cache["building"] = True
-        try:
-            t0 = _time.monotonic()
-            data = await _asyncio.to_thread(_scan_sessions_sync)
-            _sessions_cache["data"] = data
-            _sessions_cache["at"] = _time.monotonic()
-            _log.info("sessions scan: %d entries in %.0fms", len(data), (_time.monotonic() - t0) * 1000)
-            _report_harness_scan(data)
-            # Durable rollup: persist a tiny summary of each session so history
-            # outlives the agents' own transcript pruning. Fire-and-forget on a
-            # worker thread — a store failure must never break a request, and the
-            # write must not add latency to this scan.
-            _persist_history_async(data)
-        except Exception as e:
-            _log.exception("sessions scan failed: %s", e)
-            # If we have a previous value, keep serving it rather than 500-ing.
-            if cached is not None:
-                return cached
-            raise
-        finally:
-            _sessions_cache["building"] = False
-        return _sessions_cache["data"]
+        if not _sessions_cache.get("building") or _sessions_build_stuck(now):
+            if _sessions_build_stuck(now):
+                _log.warning(
+                    "sessions scan stuck for >%.0fs; starting a replacement",
+                    _SESSIONS_BUILD_TIMEOUT_SEC,
+                )
+            _sessions_cache["building"] = True
+            _sessions_cache["build_started"] = now
+            try:
+                _asyncio.get_running_loop().create_task(_refresh_sessions_quiet())
+            except RuntimeError:
+                _sessions_cache["building"] = False
+        return cached
+    return await _refresh_sessions(force=False)
 
 
 @app.get("/sessions")
-async def get_sessions(fresh: bool = False):
-    """Return the session list. Pass ?fresh=1 to force a re-scan."""
+async def get_sessions(fresh: bool = False, view: str = "full"):
+    """Return the session list. Pass ?fresh=1 to force a re-scan.
+
+    Pass ?view=summary for the slim list-feed projection (the row fields the
+    dashboard, sessions list, agents and Hermes pages render). The default
+    full view keeps every field the session detail page needs.
+    """
+    if view not in ("full", "summary"):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=422, detail="view must be 'full' or 'summary'")
     data = await get_sessions_cached(fresh=fresh)
+    if view == "summary":
+        return [_session_summary_view(s) for s in data]
     # `stub` is scan→persist plumbing (history_store.upsert_sessions keys its
     # conflict clause on it), not API surface. Strip it on shallow copies —
     # never mutate the cached dicts, which the async history persist may

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Bot, FlaskConical, Gauge } from "lucide-react";
 
 import { useResource } from "@/lib/api";
+import { SESSIONS_SUMMARY_PATH, SESSIONS_LIST_POLL_MS } from "@/lib/sessionsFeed";
 import { AGENTS, getAgent } from "@/lib/agents";
 import { AgentLogo } from "@/components/icons/AgentLogo";
 import { useQuotas } from "@/components/QuotaProvider";
@@ -64,7 +65,7 @@ function QuotaChip({ agent }: { agent: string }) {
 
 export default function AgentsPage() {
   const { data: detected, loading: agentsLoading } = useResource<string[]>("/agents", { initial: [] });
-  const { data: sessions } = useResource<SessionRow[]>("/sessions", { pollMs: 15_000, initial: [] });
+  const { data: sessions } = useResource<SessionRow[]>(SESSIONS_SUMMARY_PATH, { pollMs: SESSIONS_LIST_POLL_MS, initial: [] });
   const { data: quotas, loading: quotasLoading } = useQuotas();
 
   const stats = useMemo(() => {

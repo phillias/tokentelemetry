@@ -3,6 +3,7 @@
 import React, { useMemo } from "react";
 import { Zap, Leaf, Cpu, CheckCircle2 } from "lucide-react";
 import { useResource } from "@/lib/api";
+import { SESSIONS_SUMMARY_PATH, SESSIONS_LIST_POLL_MS } from "@/lib/sessionsFeed";
 import { Section, Card, CardTitle, Table, THead, TBody, TR, TH, TD, Badge, Skeleton } from "@/components/ui";
 import { isLocalSession, estimateEnergyWh } from "@/lib/insights";
 
@@ -21,7 +22,7 @@ interface AnalyticsData {
 }
 
 export default function LocalPowerInsights({ forceShow = false }: { forceShow?: boolean } = {}) {
-  const sessionsRes = useResource<Session[]>("/sessions", { pollMs: 15_000, initial: [] });
+  const sessionsRes = useResource<Session[]>(SESSIONS_SUMMARY_PATH, { pollMs: SESSIONS_LIST_POLL_MS, initial: [] });
   const analyticsRes = useResource<AnalyticsData>("/analytics", { pollMs: 30_000 });
 
   const loading = sessionsRes.loading || analyticsRes.loading;

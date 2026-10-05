@@ -24,7 +24,7 @@ The one-line installer also starts the app for you on first install — you only
 
 **Checks:**
 
-1. **Wait for a session to complete.** TokenTelemetry reads log files after a session ends (or after it creates a new log entry). Active sessions may not appear until the next 15-second dashboard refresh.
+1. **Wait for a session to complete.** TokenTelemetry reads log files after a session ends (or after it creates a new log entry). Active sessions may not appear until the next dashboard refresh (within a minute).
 
 2. **Confirm the log directory exists.** Each agent writes to a default location:
    - Claude Code: `~/.claude/projects/`
@@ -248,7 +248,7 @@ rm -rf backend/venv && ./start.sh
 
 **Symptom:** The dashboard shows zero sessions immediately after installing.
 
-**This is expected.** TokenTelemetry needs agent log files to read. Start an AI agent session (Claude Code, Gemini CLI, etc.), let it run for at least one exchange, then refresh the dashboard. The first session will appear within 15 seconds.
+**This is expected.** TokenTelemetry needs agent log files to read. Start an AI agent session (Claude Code, Gemini CLI, etc.), let it run for at least one exchange, then refresh the dashboard. The first session will appear within a minute.
 
 ---
 

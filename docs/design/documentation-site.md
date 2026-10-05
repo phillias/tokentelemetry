@@ -87,7 +87,7 @@ The content the docs must cover, grounded in the actual feature surface
 
 ### 2. Features  *(one page each — the shadcn "per-element" model)*
 - **Dashboard** — KPI strip (sessions, tokens, projects, API-equiv cost), live
-  15s sync, connected-agents split (coding vs autonomous), recent-activity feed,
+  sync, connected-agents split (coding vs autonomous), recent-activity feed,
   agent/model distribution charts, local-power toggle.
 - **Analytics** — date presets + custom range, granularity (day/week/month),
   agent/model multi-select filters, token area chart, cache efficiency, per-agent

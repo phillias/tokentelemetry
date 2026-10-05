@@ -428,7 +428,7 @@
   "One-time setup": "一次性設定",
   "Configuration": "設定",
   "Update checks": "更新檢查",
-  "auto-sync 15s": "自動同步 15 秒",
+  "auto-sync 60s": "自動同步 60 秒",
   "Limit reached": "已達上限",
   "Remote Access": "遠端存取",
   "Send feedback": "傳送回饋",

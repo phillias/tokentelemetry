@@ -428,7 +428,7 @@
   "One-time setup": "一度きりのセットアップ",
   "Configuration": "設定",
   "Update checks": "アップデート確認",
-  "auto-sync 15s": "自動同期 15 秒",
+  "auto-sync 60s": "自動同期 60 秒",
   "Limit reached": "上限に到達",
   "Remote Access": "リモートアクセス",
   "Send feedback": "フィードバックを送信",

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useId, useState } from "react";
 import { useResource } from "@/lib/api";
+import { SESSIONS_SUMMARY_PATH, SESSIONS_LIST_POLL_MS } from "@/lib/sessionsFeed";
 import { PageHeader, Card, EmptyState, StatTile, Badge } from "@/components/ui";
 import { formatTokens, formatCost } from "@/lib/format";
 import { timeAgo } from "@/lib/notifications";
@@ -60,7 +61,7 @@ interface Session {
 export default function ProfilesPage() {
   const budgetIdPrefix = useId().replace(/:/g, "");
   const { data, loading } = useResource<ProfilesResp>("/hermes/profiles", { pollMs: 60_000 });
-  const sessionsRes = useResource<Session[]>("/sessions", { pollMs: 60_000, initial: [] });
+  const sessionsRes = useResource<Session[]>(SESSIONS_SUMMARY_PATH, { pollMs: SESSIONS_LIST_POLL_MS, initial: [] });
   const profiles = data?.profiles || [];
   const named = profiles.filter((p) => !p.is_default);
   const totals = profiles.reduce(
