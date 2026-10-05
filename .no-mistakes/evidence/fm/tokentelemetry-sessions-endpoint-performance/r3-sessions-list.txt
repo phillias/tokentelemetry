@@ -1,0 +1,541 @@
+URL: http://127.0.0.1:13092/sessions
+locale: default
+DOM text length: 472872
+
+=== rendered text ===
+TokenTelemetry
+AGENT OBSERVABILITY
+Dashboard
+Sessions
+Agents
+Projects
+Analytics
+Local Models
+CONNECTED
+1
+Claude Code
+PLAN LIMITS
+100%
+NOTIFICATIONS
+Settings
+LIGHT
+COLLAPSE
+Update available for TokenTelemetry
+git pull && ./start.sh
+What's changed
+TRACES
+Sessions
+
+Every recorded agent session, newest first. The dashboard shows the 50 most recent; this is the full list.
+
+TOTALS
+
+201 sessions shown
+
+SESSIONS
+201
+in filter
+TOKENS
+1.92M
+in filter
+EST. COST
+$17.86
+in filter
+AGENT	PROJECT	CONTEXT	TOKENS	COST	TIME
+
+CLAUDE CODE
+	
+alpha
+	
+BRAND NEW SESSION
+	601	$0.0045	
+20:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 197 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 194 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 191 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 188 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 185 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 182 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 179 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 176 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 173 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 170 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 167 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 164 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 161 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 158 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 155 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 152 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 149 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 146 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 143 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 140 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 137 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 134 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 131 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 128 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 125 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 122 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 119 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 116 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 113 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 110 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 107 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 104 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 101 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 98 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 95 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 92 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 89 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 86 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 83 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 80 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 77 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 74 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 71 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 68 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 65 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 62 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 59 prompt
+	9.6k	$0.09	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 56 prompt
+	9.6k	
+
+=== network requests (API-ish) ===
+GET http://127.0.0.1:13092/sessions  [Accept: ]
+GET http://127.0.0.1:13092/agents  [Accept: ]
+GET http://127.0.0.1:13092/sessions?view=summary  [Accept: ]
+GET http://127.0.0.1:13092/quotas  [Accept: ]
+GET http://127.0.0.1:13092/sessions?_rsc=hs_pchXiBOf1_5lx  [Accept: ]
+GET http://127.0.0.1:13092/agents?_rsc=hs_pchXiBOf1_5lx  [Accept: ]
+GET http://127.0.0.1:13092/projects?_rsc=hs_pchXiBOf1_5lx  [Accept: ]
+GET http://127.0.0.1:13092/analytics?_rsc=hs_pchXiBOf1_5lx  [Accept: ]

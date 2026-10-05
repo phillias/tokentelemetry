@@ -1,0 +1,11 @@
+== stale-while-revalidate: stale snapshot served during a background rescan ==
+(prime cache; expire TTL; append a session so a rescan must publish a changed snapshot)
+prime (fresh publish): HTTP 200 in 0.161294s
+rows before new session: 201
+waiting past 30s cache TTL...
+appended new session 047b0cfb-8ab3-4185-9acd-d8fa04f2f5a0
+post-TTL request 1 : HTTP 200 in 0.015877s rows=201
+post-TTL request 2 : HTTP 200 in 0.016084s rows=202
+post-TTL request 3 : HTTP 200 in 0.017431s rows=202
+waiting for background rescan to publish...
+background rescan published after ~1s: rows=202 (updated snapshot includes new session)

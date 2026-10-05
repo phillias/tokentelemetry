@@ -1,0 +1,145 @@
+URL: http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/insights
+locale: default
+DOM text length: 166808
+
+=== rendered text ===
+TokenTelemetry
+AGENT OBSERVABILITY
+Dashboard
+Sessions
+Agents
+Projects
+Analytics
+Local Models
+CONNECTED
+1
+Claude Code
+PLAN LIMITS
+100%
+NOTIFICATIONS
+Settings
+LIGHT
+COLLAPSE
+Update available for TokenTelemetry
+git pull && ./start.sh
+What's changed
+Projects
+alpha
+alpha
+/workspace/alpha
+CLAUDE CODE
+SESSIONS
+68
+SUBAGENTS
+0
+PLANS
+0
+TOKENS
+643.7k
+Activity
+68
+Insights
+Plans
+0
+Artifacts
+0
+Config
+No budget set for this project
+Track spend against a monthly limit — overall or per agent.
+Set a budget
+CURRENT STREAK
+0d
+LONGEST STREAK
+1d
+TOTAL SESSIONS
+68
+TOTAL TOKENS
+643,734
+Activity heatmap
+
+Last 365 days. Each cell colored by the dominant agent that day, intensity by sessions.
+
+SESSIONS
+TOKENS
+OCT
+NOV
+DEC
+JAN
+FEB
+MAR
+APR
+MAY
+JUN
+JUL
+AUG
+SEP
+OCT
+Mon
+Wed
+Fri
+less
+more
+PER-AGENT ACTIVITY
+CLAUDE CODE
+68 sess · 643.7k tok
+Delegation & ecosystem
+
+Skill & MCP usage recorded in this project's sessions.
+
+MCP SERVERS
+chrome
+2680 calls · 67 sess
+claude · navigate ×2680
+Agent leaderboard
+CLAUDE CODE
+68 sess · 643.7k tok
+Tools & MCPs used
+Bash
+67
+mcp__chrome__navigate
+67
+Read
+67
+When you work
+
+Session starts by day-of-week × hour (local time).
+
+0
+2
+4
+6
+8
+10
+12
+14
+16
+18
+20
+22
+SUN
+MON
+TUE
+WED
+THU
+FRI
+SAT
+quiet
+busy
+
+=== network requests (API-ish) ===
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/insights  [Accept: ]
+GET http://127.0.0.1:13092/agents  [Accept: ]
+GET http://127.0.0.1:13092/projects  [Accept: ]
+GET http://127.0.0.1:13092/sessions  [Accept: ]
+GET http://127.0.0.1:13092/budgets  [Accept: ]
+GET http://127.0.0.1:13092/quotas  [Accept: ]
+GET http://127.0.0.1:13092/sessions?_rsc=UB7BClx8guwOZflZ  [Accept: ]
+GET http://127.0.0.1:13092/agents?_rsc=UB7BClx8guwOZflZ  [Accept: ]
+GET http://127.0.0.1:13092/projects?_rsc=UB7BClx8guwOZflZ  [Accept: ]
+GET http://127.0.0.1:13092/analytics?_rsc=UB7BClx8guwOZflZ  [Accept: ]
+GET http://127.0.0.1:13092/budgets  [Accept: ]
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/activity?_rsc=UB7BClx8guwOZflZ  [Accept: ]
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/plans?_rsc=UB7BClx8guwOZflZ  [Accept: ]
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/artifacts?_rsc=UB7BClx8guwOZflZ  [Accept: ]
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/config?_rsc=UB7BClx8guwOZflZ  [Accept: ]
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/insights?_rsc=6sL1m8HMAa-yopvg  [Accept: ]

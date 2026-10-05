@@ -1,0 +1,25 @@
+== stale-while-revalidate live demonstration ==
+(cache TTL is 30s; force a fresh publish, wait past TTL, then make the rescan expensive by touching every transcript)
+
+reset cache           : 0.135304s
+touched 201 transcripts (next background scan must fully reparse)
+
+request 1 (age>TTL)     : HTTP 200  served in 0.021764s  bytes=69348
+request 2 (age>TTL)     : HTTP 200  served in 0.016586s  bytes=69348
+request 3 (age>TTL)     : HTTP 200  served in 0.031888s  bytes=69348
+request 4 (age>TTL)     : HTTP 200  served in 0.024786s  bytes=69348
+request 5 (age>TTL)     : HTTP 200  served in 0.033475s  bytes=69348
+
+rows served to each of those requests (all the stale snapshot, no 201st session yet):
+  request 1: 201 rows
+  request 2: 201 rows
+  request 3: 201 rows
+  request 4: 201 rows
+  request 5: 201 rows
+
+measured single full reparse (blocking) for the same store:
+  /sessions?fresh=1  : 0.096609s
+
+after the background rescan landed:
+  next list request : HTTP 200  0.017067s  bytes=69348
+  rows: 201

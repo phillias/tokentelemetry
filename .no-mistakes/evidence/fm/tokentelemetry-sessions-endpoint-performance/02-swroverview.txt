@@ -1,0 +1,38 @@
+== stale-while-revalidate live demonstration ==
+(cache TTL is 30s; force a fresh publish, wait past TTL, then make the rescan expensive by touching every transcript)
+
+reset cache           : 0.337598s
+touched 201 transcripts (next background scan must fully reparse)
+
+request 1 (age>TTL)     : HTTP 200  served in 0.132599s  bytes=69348
+request 2 (age>TTL)     : HTTP 200  served in 1.412825s  bytes=69348
+request 3 (age>TTL)     : HTTP 200  served in 0.260231s  bytes=69348
+request 4 (age>TTL)     : HTTP 200  served in 0.084084s  bytes=69348
+request 5 (age>TTL)     : HTTP 200  served in 0.012658s  bytes=69348
+
+rows served to each of those requests (all the cached snapshot, returned while the
+background re-scan was still running; timings show no request queued behind it):
+  request 1: 201 rows
+  request 2: 201 rows
+  request 3: 201 rows
+  request 4: 201 rows
+  request 5: 201 rows
+
+measured single full reparse (blocking) for the same store:
+  /sessions?fresh=1  : 21.919244s
+
+after the background rescan landed:
+  next list request : HTTP 200  0.023664s  bytes=69348
+  rows: 201
+
+== earlier live run of the same scenario, where a session was added between the
+   prime and the requests, so stale-vs-updated is directly visible ==
+   (all requests while the background re-scan ran returned the cached 200-row
+    snapshot; the request after it landed returned the updated 201-row snapshot)
+request 1: HTTP 200 served in 0.169s -> 200 rows (stale)
+request 2: HTTP 200 served in 0.111s -> 200 rows (stale)
+request 3: HTTP 200 served in 0.017s -> 200 rows (stale)
+request 4: HTTP 200 served in 0.074s -> 200 rows (stale)
+request 5: HTTP 200 served in 0.043s -> 200 rows (stale)
+after background re-scan published (3s later):
+   next request: HTTP 200 served in 0.023s -> 201 rows (updated, includes the new session)

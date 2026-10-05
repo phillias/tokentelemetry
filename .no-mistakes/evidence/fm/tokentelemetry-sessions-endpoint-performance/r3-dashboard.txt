@@ -1,0 +1,577 @@
+URL: http://127.0.0.1:13092/
+locale: default
+DOM text length: 138362
+
+=== rendered text ===
+TokenTelemetry
+AGENT OBSERVABILITY
+Dashboard
+Sessions
+Agents
+Projects
+Analytics
+Local Models
+CONNECTED
+1
+Claude Code
+PLAN LIMITS
+100%
+NOTIFICATIONS
+Settings
+LIGHT
+COLLAPSE
+Update available for TokenTelemetry
+git pull && ./start.sh
+What's changed
+OVERVIEW
+Dashboard
+
+Monitoring 201 traces across 1 detected agent.
+
+Live
+Analytics
+KEY METRICS
+SESSIONS
+201
+All time
+TOKENS
+1.92M
+All time
+ACTIVE PROJECTS
+3
+API EQUIV. (EST.)
+$17.86
+Estimated API spend at list prices. · all time
+
+💡 You're on pay-per-token (API) plans, so this approximates your actual bill — though it's still an estimate: tiers, batch/cache discounts and overage rates can shift the real figure. Set your plans.
+
+CONNECTED CODING AGENTS
+
+Detected from local agent runtimes — counts reflect sessions captured.
+
+201
+CLAUDE CODE
+Recent activity
+AUTO-SYNC 60S
+AGENT	PROJECT	CONTEXT	TIME
+
+CLAUDE CODE
+	
+alpha
+	
+BRAND NEW SESSION
+	
+20:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 197 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 194 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 191 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 188 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 185 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 182 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 179 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 176 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 173 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 170 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 167 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 164 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 161 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 158 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 155 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 152 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 149 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 146 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 143 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 140 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 137 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 134 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 131 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 128 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 125 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 122 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 119 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 116 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 113 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 110 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 107 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 104 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 101 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 98 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 95 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 92 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 89 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 86 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 83 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 80 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 77 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 74 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 71 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 68 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 65 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 62 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 59 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 56 prompt
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+gamma
+	
+session 53 prompt
+	
+08:00:01
+SEP 30
+Agent distribution
+201 SESSIONS
+Claude Code
+201 · 100%
+VIEW ANALYTICS
+Model distribution
+1 MODELS
+claude-sonnet-4-6
+201
+C
+
+=== network requests (API-ish) ===
+GET http://127.0.0.1:13092/agents  [Accept: ]
+GET http://127.0.0.1:13092/sessions?view=summary  [Accept: ]
+GET http://127.0.0.1:13092/agents  [Accept: ]
+GET http://127.0.0.1:13092/analytics  [Accept: ]
+GET http://127.0.0.1:13092/agents/panels  [Accept: ]
+GET http://127.0.0.1:13092/quotas  [Accept: ]
+GET http://127.0.0.1:13092/sessions?_rsc=5CB68i4pnAekjehf  [Accept: ]
+GET http://127.0.0.1:13092/agents?_rsc=5CB68i4pnAekjehf  [Accept: ]
+GET http://127.0.0.1:13092/projects?_rsc=5CB68i4pnAekjehf  [Accept: ]
+GET http://127.0.0.1:13092/analytics?_rsc=5CB68i4pnAekjehf  [Accept: ]

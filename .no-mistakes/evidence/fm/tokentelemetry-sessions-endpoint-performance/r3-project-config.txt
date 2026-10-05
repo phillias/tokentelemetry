@@ -1,0 +1,96 @@
+URL: http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/config
+locale: default
+DOM text length: 48137
+
+=== rendered text ===
+TokenTelemetry
+AGENT OBSERVABILITY
+Dashboard
+Sessions
+Agents
+Projects
+Analytics
+Local Models
+CONNECTED
+1
+Claude Code
+PLAN LIMITS
+100%
+NOTIFICATIONS
+Settings
+LIGHT
+COLLAPSE
+Update available for TokenTelemetry
+git pull && ./start.sh
+What's changed
+Projects
+alpha
+alpha
+/workspace/alpha
+CLAUDE CODE
+SESSIONS
+68
+SUBAGENTS
+0
+PLANS
+0
+TOKENS
+643.7k
+Activity
+68
+Insights
+Plans
+0
+Artifacts
+0
+Config
+Budgets
+
+Set a spend limit for this project — overall and per agent. Alerts only; TokenTelemetry never blocks an agent.
+
+No budgets yet. Add a project-wide limit or a per-agent limit below.
+Project total
++ Add agent budget…
+Claude Code
+Save budgets
+PLUGINS
+0
+project
+SUBAGENTS
+0
+project
+SKILLS
+0
+project
+COMMANDS
+0
+project
+MCP SERVERS
+0
+project
+MEMORY
+0
+project
+PROJECT CONFIGURATION
+/workspace/alpha
+No project-scoped config
+No plugins, skills, commands, MCPs, or memory found in this workspace.
+
+=== network requests (API-ish) ===
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/config  [Accept: ]
+GET http://127.0.0.1:13092/agents  [Accept: ]
+GET http://127.0.0.1:13092/analytics  [Accept: ]
+GET http://127.0.0.1:13092/projects  [Accept: ]
+GET http://127.0.0.1:13092/sessions  [Accept: ]
+GET http://127.0.0.1:13092/budgets  [Accept: ]
+GET http://127.0.0.1:13092/quotas  [Accept: ]
+GET http://127.0.0.1:13092/sessions?_rsc=C_kghWk9Tb9Zxn0E  [Accept: ]
+GET http://127.0.0.1:13092/agents?_rsc=C_kghWk9Tb9Zxn0E  [Accept: ]
+GET http://127.0.0.1:13092/projects?_rsc=C_kghWk9Tb9Zxn0E  [Accept: ]
+GET http://127.0.0.1:13092/analytics?_rsc=C_kghWk9Tb9Zxn0E  [Accept: ]
+GET http://127.0.0.1:13092/budgets  [Accept: ]
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/activity?_rsc=C_kghWk9Tb9Zxn0E  [Accept: ]
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/insights?_rsc=C_kghWk9Tb9Zxn0E  [Accept: ]
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/plans?_rsc=C_kghWk9Tb9Zxn0E  [Accept: ]
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/artifacts?_rsc=C_kghWk9Tb9Zxn0E  [Accept: ]
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/config?_rsc=xrioOnTVuzyhLIfG  [Accept: ]

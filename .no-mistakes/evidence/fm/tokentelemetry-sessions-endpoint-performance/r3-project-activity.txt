@@ -1,0 +1,652 @@
+URL: http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/activity
+locale: default
+DOM text length: 223426
+
+=== rendered text ===
+TokenTelemetry
+AGENT OBSERVABILITY
+Dashboard
+Sessions
+Agents
+Projects
+Analytics
+Local Models
+CONNECTED
+1
+Claude Code
+PLAN LIMITS
+100%
+NOTIFICATIONS
+Settings
+LIGHT
+COLLAPSE
+Update available for TokenTelemetry
+git pull && ./start.sh
+What's changed
+Projects
+alpha
+alpha
+/workspace/alpha
+CLAUDE CODE
+SESSIONS
+68
+SUBAGENTS
+0
+PLANS
+0
+TOKENS
+643.7k
+Activity
+68
+Insights
+Plans
+0
+Artifacts
+0
+Config
+Session history
+68 SESSIONS
+AGENT	SESSION INTENT	INSIGHTS	TIMESTAMP
+
+CLAUDE CODE
+	
+BRAND NEW SESSION
+		
+20:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 198 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 195 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 192 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 189 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 186 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 183 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 180 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 177 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 174 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 171 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 168 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 165 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 162 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 159 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 156 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 153 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 150 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 147 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 144 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 141 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 138 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 135 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 132 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 129 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 126 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 123 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 120 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 117 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 114 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 111 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 108 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 105 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 102 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 99 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 96 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 93 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 90 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 87 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 84 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 81 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 78 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 75 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 72 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 69 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 66 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 63 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 60 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 57 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 54 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 51 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 48 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 45 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 42 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 39 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 36 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 33 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 30 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 27 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 24 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 21 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 18 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 15 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 12 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+CLAUDE CODE
+	
+session 9 prompt
+	
+	
+08:00:01
+SEP 30
+
+
+
+
+=== network requests (API-ish) ===
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/activity  [Accept: ]
+GET http://127.0.0.1:13092/agents  [Accept: ]
+GET http://127.0.0.1:13092/projects  [Accept: ]
+GET http://127.0.0.1:13092/sessions  [Accept: ]
+GET http://127.0.0.1:13092/budgets  [Accept: ]
+GET http://127.0.0.1:13092/quotas  [Accept: ]
+GET http://127.0.0.1:13092/sessions?_rsc=Um8FNai5J_7kezAs  [Accept: ]
+GET http://127.0.0.1:13092/agents?_rsc=Um8FNai5J_7kezAs  [Accept: ]
+GET http://127.0.0.1:13092/projects?_rsc=Um8FNai5J_7kezAs  [Accept: ]
+GET http://127.0.0.1:13092/analytics?_rsc=Um8FNai5J_7kezAs  [Accept: ]
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/insights?_rsc=Um8FNai5J_7kezAs  [Accept: ]
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/plans?_rsc=Um8FNai5J_7kezAs  [Accept: ]
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/artifacts?_rsc=Um8FNai5J_7kezAs  [Accept: ]
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/config?_rsc=Um8FNai5J_7kezAs  [Accept: ]
+GET http://127.0.0.1:13092/projects/%2Fworkspace%2Falpha/activity?_rsc=F2kTuyctIoWWRijo  [Accept: ]

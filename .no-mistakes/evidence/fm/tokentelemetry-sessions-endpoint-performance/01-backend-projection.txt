@@ -1,0 +1,18 @@
+# /sessions perf-change backend evidence
+
+Host: disposable backend (uvicorn main.py) on 127.0.0.1:18091
+HOME=/tmp/tt-nm/home (seeded fake claude store: 200 sessions x 40 turns)
+TOKENTELEMETRY_DATA_DIR=/tmp/tt-nm/data
+
+## summary vs full projection
+full      http=200 time=0.035932s bytes=127097
+summary   http=200 time=0.015284s bytes=69348
+bad view  http=422
+
+bad view body: {"detail":"view must be 'full' or 'summary'"}
+
+rows: 201 201
+summary row keys : ['agent', 'cost', 'display', 'id', 'model', 'project', 'timestamp', 'tokens']
+full-only fields : ['artifacts', 'delegation', 'has_plan', 'mcp_tools', 'plans']
+stub in full?    : False
+detail field in summary? False

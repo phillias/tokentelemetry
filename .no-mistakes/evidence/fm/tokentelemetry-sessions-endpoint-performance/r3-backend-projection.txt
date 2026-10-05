@@ -1,0 +1,15 @@
+# /sessions projection + timing (live, disposable backend on 18091)
+store: /tmp/tt-nm/home (201 seeded sessions x 40 turns)
+
+summary view : HTTP 200 in 0.238473s bytes=69348
+full view    : HTTP 200 in 0.038946s bytes=127097
+default(none): HTTP 200 in 0.078799s bytes=127097
+invalid view : HTTP 422
+invalid body : {"detail":"view must be 'full' or 'summary'"}
+
+summary rows : 201
+keys: ['agent', 'cost', 'display', 'id', 'model', 'project', 'timestamp', 'tokens']
+full-only fields present?: []
+
+full rows    : 201
+keys: ['agent', 'artifacts', 'cost', 'delegation', 'display', 'has_plan', 'id', 'mcp_tools', 'model', 'plans', 'project', 'timestamp', 'tokens']
