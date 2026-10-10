@@ -17,6 +17,8 @@ from fastapi import HTTPException
 sys.path.insert(0, os.path.dirname(__file__))
 import main  # noqa: E402
 
+_REAL_PERSIST_HISTORY_ASYNC = main._persist_history_async
+
 
 def _run(coro):
     return asyncio.run(coro)
@@ -55,6 +57,8 @@ def feed_env(monkeypatch):
     monkeypatch.setattr(main, "_sessions_lock", None)
     monkeypatch.setattr(main, "_report_harness_scan", lambda data: None)
     monkeypatch.setattr(main, "_persist_history_async", lambda data: None)
+    main._history_persist_running = False
+    main._history_persist_pending = None
     main._sessions_cache.update(
         {
             "data": None,
@@ -66,6 +70,8 @@ def feed_env(monkeypatch):
     )
     yield main
     main._sessions_lock = None
+    main._history_persist_running = False
+    main._history_persist_pending = None
     main._sessions_cache.update(
         {
             "data": None,
@@ -228,3 +234,54 @@ def test_fresh_forces_rescan(feed_env, monkeypatch):
     got = _run(feed_env.get_sessions_cached(fresh=True))
     assert [s["id"] for s in got] == ["rescanned"]
     assert calls == [1]
+
+
+def test_history_persist_coalesces_slow_writes(feed_env, monkeypatch):
+    import history_store
+
+    monkeypatch.setattr(feed_env, "_persist_history_async", _REAL_PERSIST_HISTORY_ASYNC)
+    monkeypatch.setattr(feed_env, "_archive_opted_in_transcripts", lambda data: None)
+
+    started = threading.Event()
+    release = threading.Event()
+    calls = []
+
+    def upsert_sessions(rows):
+        calls.append([r["id"] for r in rows])
+        started.set()
+        assert release.wait(timeout=5)
+        return len(rows)
+
+    monkeypatch.setattr(history_store, "upsert_sessions", upsert_sessions)
+    monkeypatch.setattr(history_store, "mark_absent", lambda seen: None)
+
+    async def scenario():
+        feed_env._persist_history_async([_row("first", plans=[{"content": "large"}])])
+        assert await asyncio.to_thread(started.wait, 5)
+
+        for i in range(5):
+            feed_env._persist_history_async([
+                _row(f"latest-{i}", plans=[{"content": "large"}], artifacts=[{"path": "large"}])
+            ])
+
+        await asyncio.sleep(0.1)
+        assert calls == [["first"]]
+        with feed_env._history_persist_lock:
+            pending = feed_env._history_persist_pending
+            assert pending is not None
+            assert [r["id"] for r in pending] == ["latest-4"]
+            assert "plans" not in pending[0]
+            assert "artifacts" not in pending[0]
+            assert pending[0]["tokens"] == {"input": 1, "output": 2, "cached": 0, "total": 3}
+
+        release.set()
+        for _ in range(200):
+            with feed_env._history_persist_lock:
+                running = feed_env._history_persist_running
+            if not running:
+                break
+            await asyncio.sleep(0.05)
+
+    _run(scenario())
+
+    assert calls == [["first"], ["latest-4"]]

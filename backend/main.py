@@ -9428,6 +9428,7 @@ def _scan_sessions_sync():
 # and asyncio.to_thread keeps the event loop free while we scan.
 import asyncio as _asyncio
 import time as _time
+import threading as _threading
 from pricing import calculate_cost, PRICING, PRICING_UPDATED, PRICING_OVERLAY_UPDATED
 import logging as _logging
 
@@ -9582,12 +9583,44 @@ def _resolve_transcript_path(agent: str, session_id: str) -> Optional[Path]:
     return None
 
 
-def _persist_history_async(data: List[Dict[str, Any]]) -> None:
-    """Schedule the durable-history write off the request path. Fire-and-forget:
-    failures are logged inside the store and never surface to the caller."""
+_HISTORY_PERSIST_FIELDS = (
+    "id", "agent", "project", "model", "provider", "endpoint", "billing_mode",
+    "timestamp", "cost", "tok_per_sec", "stub", "delegated_cost",
+    "delegated_by_model", "transcript_archived",
+    # history_store's ecosystem_json payload.
+    "skills_used", "mcp_usage", "delegation", "subagent_info",
+    "parent_session_id", "loop", "published_artifacts", "tool_errors",
+    "mcp_errors",
+)
+_history_persist_lock = _threading.Lock()
+_history_persist_running = False
+_history_persist_pending: Optional[List[Dict[str, Any]]] = None
+
+
+def _history_persist_snapshot(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Copy only the fields durable history needs before leaving the scan path.
+
+    The live session rows can carry detail/UI metadata that is large compared
+    with the rollup written to history.db. A slow history write must not pin
+    whole scan snapshots in the executor queue.
+    """
+    out: List[Dict[str, Any]] = []
+    for s in data:
+        row = {field: s[field] for field in _HISTORY_PERSIST_FIELDS if field in s}
+        tokens = s.get("tokens")
+        if isinstance(tokens, dict):
+            row["tokens"] = dict(tokens)
+        out.append(row)
+    return out
+
+
+def _persist_history_work(initial: List[Dict[str, Any]]) -> None:
+    """Persist the newest scan snapshot, coalescing any superseded snapshots."""
+    global _history_persist_running, _history_persist_pending
     import history_store
 
-    def _work() -> None:
+    data = initial
+    while True:
         try:
             history_store.upsert_sessions(data)
             history_store.mark_absent({(s.get("agent"), s.get("id")) for s in data
@@ -9596,11 +9629,37 @@ def _persist_history_async(data: List[Dict[str, Any]]) -> None:
         except Exception as e:  # noqa: BLE001
             _log.exception("history persist failed: %s", e)
 
+        with _history_persist_lock:
+            if _history_persist_pending is None:
+                _history_persist_running = False
+                return
+            data = _history_persist_pending
+            _history_persist_pending = None
+
+
+def _persist_history_async(data: List[Dict[str, Any]]) -> None:
+    """Schedule the durable-history write off the request path. Fire-and-forget:
+    failures are logged inside the store and never surface to the caller.
+
+    Only one persistence worker may run at a time. If scans finish faster than
+    SQLite/archive work, keep the latest compact snapshot and drop superseded
+    ones; history is a rollup of current live sessions, so stale intermediate
+    snapshots are not worth retaining in memory.
+    """
+    global _history_persist_running, _history_persist_pending
+
+    snapshot = _history_persist_snapshot(data)
+    with _history_persist_lock:
+        if _history_persist_running:
+            _history_persist_pending = snapshot
+            return
+        _history_persist_running = True
+
     try:
-        _asyncio.get_running_loop().run_in_executor(None, _work)
+        _asyncio.get_running_loop().run_in_executor(None, _persist_history_work, snapshot)
     except RuntimeError:
         # No running loop (e.g. called from a sync context) — run inline.
-        _work()
+        _persist_history_work(snapshot)
 
 
 _harness_scan_reported = False
