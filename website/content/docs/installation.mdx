@@ -10,7 +10,7 @@ import { Callout } from 'fumadocs-ui/components/callout';
 Before installing, make sure you have:
 
 - **Node.js 20.9+** — [nodejs.org](https://nodejs.org). The launcher refuses anything older. Node.js 22.22+ is recommended: below it npm prints `EBADENGINE` warnings during the first install (on Windows too), which are harmless.
-- **Python 3.9+** — [python.org](https://www.python.org/downloads/). On Debian/Ubuntu, also `sudo apt install python3-venv`: Python there ships without the venv/pip bootstrap, so the first launch can't install the backend dependencies.
+- **Python 3.12+** — [python.org](https://www.python.org/downloads/). On Debian/Ubuntu, also `sudo apt install python3-venv`: Python there ships without the venv/pip bootstrap, so the first launch can't install the backend dependencies.
 - **npm** (comes with Node.js)
 - At least one supported AI coding agent already installed (Claude Code, Gemini CLI, Codex, etc.)
 
@@ -74,6 +74,18 @@ The launcher creates a Python virtual environment and installs dependencies on f
 If [uv](https://docs.astral.sh/uv/) is already on your PATH the launcher uses it for both steps, which is a good deal faster; otherwise it uses `python -m venv` and pip. You don't need to install uv, and either way you get the same interpreter and the same hash-checked packages. Set `TT_NO_UV=1` to force the pip path.
 
 The dashboard's JavaScript dependencies work the same way on macOS and Linux. If [Bun](https://bun.sh) is on your PATH the launcher installs them with `bun install`, which reinstalls in about a second instead of npm's six when dependencies change after an update; otherwise it uses `npm ci`. Bun installs exactly the versions and checksums pinned in `package-lock.json`, and if it fails for any reason the launcher falls back to npm. You don't need Bun, and Node.js is still required either way. Set `TT_NO_BUN=1` to always use npm. On Windows the launcher always uses npm, which installed about twice as fast as Bun there.
+
+### systemd user services
+
+For a systemd-managed checkout, run the launcher through mise so the service and interactive shells select the same Python 3.12 runtime:
+
+```ini
+[Service]
+WorkingDirectory=/path/to/tokentelemetry
+ExecStart=/usr/bin/mise exec python@3.12 -- node /path/to/tokentelemetry/bin/cli.js
+```
+
+After updating an existing deployment, restart the service once. The launcher detects an older `backend/venv` interpreter, removes that venv, and rebuilds it with the Python 3.12 selected by mise before installing the hash-pinned lock.
 
 ## What gets installed
 

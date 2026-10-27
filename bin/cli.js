@@ -356,6 +356,13 @@ function findPython() {
   die('Python 3.12+ is required. Install from https://www.python.org/downloads/ and retry.');
 }
 
+function pythonVersion(cmd) {
+  const probe = spawnSync(cmd, ['-c', 'import sys; print("%d.%d" % sys.version_info[:2])'], { encoding: 'utf8' });
+  if (probe.status !== 0) return null;
+  const match = probe.stdout.match(/^(\d+)\.(\d+)$/m);
+  return match ? [Number(match[1]), Number(match[2])] : null;
+}
+
 function pythonSeries() {
   // "3.10" for the venv interpreter (or the system one, if there's no venv yet).
   // Used to name the right distro package in the pip-bootstrap hint. No shell,
@@ -446,6 +453,13 @@ function ensureVenvPip() {
 
 function ensureBackend() {
   const uv = findUv();
+  if (fs.existsSync(venvPython)) {
+    const version = pythonVersion(venvPython);
+    if (!version || version[0] < 3 || (version[0] === 3 && version[1] < 12)) {
+      console.log('→ rebuilding backend venv with Python 3.12+…');
+      fs.rmSync(venvDir, { recursive: true, force: true });
+    }
+  }
   // Check for the interpreter rather than the directory: an interrupted or
   // failed `python -m venv` leaves a directory behind with nothing runnable in
   // it. Re-running venv creation over an existing directory fills in what's

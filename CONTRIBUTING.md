@@ -19,7 +19,7 @@ Thank you for your interest in contributing! TokenTelemetry is a 100% local, ope
 
 ### Requirements
 - Node.js 18+
-- Python 3.9+
+- Python 3.12+
 - git
 
 ### Run locally

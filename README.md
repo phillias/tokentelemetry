@@ -212,6 +212,18 @@ Captured plan-mode outputs from Claude Code's `/plan` command and equivalent in 
 - Optional, for faster installs and updates: [uv](https://docs.astral.sh/uv/) (all platforms) and [Bun](https://bun.sh) (macOS and Linux). The launcher uses them when they're on your PATH and falls back to pip and npm otherwise.
 - Any supported AI coding agent already installed (Claude Code, Gemini CLI, Codex, etc.)
 
+### systemd user services
+
+Run the launcher through mise so a systemd service uses the same Python 3.12 runtime as interactive launches:
+
+```ini
+[Service]
+WorkingDirectory=/path/to/tokentelemetry
+ExecStart=/usr/bin/mise exec python@3.12 -- node /path/to/tokentelemetry/bin/cli.js
+```
+
+After updating an existing deployment, restart the service once. The launcher detects an older `backend/venv` interpreter, rebuilds that venv with the Python 3.12 selected by mise, and then installs the hash-pinned backend lock.
+
 ---
 
 ## Configuration

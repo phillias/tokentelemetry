@@ -80,6 +80,24 @@ def _locked_pins():
     return pins
 
 
+def _locked_records():
+    """Parsed lock records with the hashes pip will verify."""
+    records = []
+    current = None
+    with open(LOCK, encoding="utf-8") as fh:
+        for line in fh:
+            m = _PIN.match(line.rstrip("\n"))
+            if m:
+                current = {"name": canonicalize_name(m.group(1)), "hashes": []}
+                records.append(current)
+                continue
+            if current:
+                hash_match = re.search(r"--hash=sha256:([0-9a-f]{64})", line)
+                if hash_match:
+                    current["hashes"].append(hash_match.group(1))
+    return records
+
+
 def test_lock_covers_every_direct_requirement():
     missing = sorted(set(_direct_requirements()) - set(_locked_pins()))
     assert not missing, (
@@ -123,5 +141,9 @@ def test_locked_versions_satisfy_their_specifiers():
 def test_lock_is_hash_pinned():
     """cli.js only prefers the lock when it carries hashes; without them it
     silently falls back to requirements.txt and this guard would be moot."""
-    with open(LOCK, encoding="utf-8") as fh:
-        assert "--hash=" in fh.read(), "requirements.lock carries no hashes"
+    records = _locked_records()
+    missing = [record["name"] for record in records if not record["hashes"]]
+    assert records, "requirements.lock contains no parsed requirement records"
+    assert not missing, "requirements.lock records without sha256 hashes: {}".format(
+        ", ".join(sorted(set(missing)))
+    )
