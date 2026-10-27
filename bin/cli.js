@@ -349,11 +349,18 @@ function findPython() {
       const m = probe.stdout.match(/\((\d+),\s*(\d+)\)/);
       if (m) {
         const [, maj, min] = m.map(Number);
-        if (maj >= 3 && min >= 9) return cmd;
+        if (maj > 3 || (maj === 3 && min >= 12)) return cmd;
       }
     }
   }
-  die('Python 3.9+ is required. Install from https://www.python.org/downloads/ and retry.');
+  die('Python 3.12+ is required. Install from https://www.python.org/downloads/ and retry.');
+}
+
+function pythonVersion(cmd) {
+  const probe = spawnSync(cmd, ['-c', 'import sys; print("%d.%d" % sys.version_info[:2])'], { encoding: 'utf8' });
+  if (probe.status !== 0) return null;
+  const match = probe.stdout.match(/^(\d+)\.(\d+)$/m);
+  return match ? [Number(match[1]), Number(match[2])] : null;
 }
 
 function pythonSeries() {
@@ -446,6 +453,13 @@ function ensureVenvPip() {
 
 function ensureBackend() {
   const uv = findUv();
+  if (fs.existsSync(venvPython)) {
+    const version = pythonVersion(venvPython);
+    if (!version || version[0] < 3 || (version[0] === 3 && version[1] < 12)) {
+      console.log('→ rebuilding backend venv with Python 3.12+…');
+      fs.rmSync(venvDir, { recursive: true, force: true });
+    }
+  }
   // Check for the interpreter rather than the directory: an interrupted or
   // failed `python -m venv` leaves a directory behind with nothing runnable in
   // it. Re-running venv creation over an existing directory fills in what's

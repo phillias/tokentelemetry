@@ -18,7 +18,7 @@ Both failure modes have happened or are pending:
   the lock does exactly this, and nothing downstream notices.
 
 Regenerate with the command recorded in the lock's own header:
-    uv pip compile --universal --generate-hashes --python-version 3.9 \
+    uv pip compile --universal --generate-hashes --python-version 3.12 \
         backend/requirements.txt -o backend/requirements.lock
 
 A lock uv generated is consistent by construction: given a specifier it cannot
@@ -37,6 +37,7 @@ import re
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 from packaging.version import Version
+from pip._internal.req.req_file import parse_requirements
 
 HERE = os.path.dirname(__file__)
 REQ = os.path.join(HERE, "requirements.txt")
@@ -78,6 +79,20 @@ def _locked_pins():
                 name, version, marker = m.group(1), m.group(2), m.group(3) or ""
                 pins.setdefault(canonicalize_name(name), []).append((version, marker))
     return pins
+
+
+def _locked_records():
+    """Parsed lock records with the hashes pip will verify."""
+    records = []
+    for parsed in parse_requirements(LOCK, session=None):
+        if not parsed.requirement:
+            continue
+        hashes = parsed.options.get("hashes", {})
+        records.append({
+            "name": canonicalize_name(Requirement(parsed.requirement).name),
+            "hashes": hashes.get("sha256", []),
+        })
+    return records
 
 
 def test_lock_covers_every_direct_requirement():
@@ -123,5 +138,15 @@ def test_locked_versions_satisfy_their_specifiers():
 def test_lock_is_hash_pinned():
     """cli.js only prefers the lock when it carries hashes; without them it
     silently falls back to requirements.txt and this guard would be moot."""
-    with open(LOCK, encoding="utf-8") as fh:
-        assert "--hash=" in fh.read(), "requirements.lock carries no hashes"
+    records = _locked_records()
+    missing = [record["name"] for record in records if not record["hashes"]]
+    invalid = [record["name"] for record in records if any(
+        not re.fullmatch(r"[0-9a-f]{64}", digest) for digest in record["hashes"]
+    )]
+    assert records, "requirements.lock contains no parsed requirement records"
+    assert not missing, "requirements.lock records without sha256 hashes: {}".format(
+        ", ".join(sorted(set(missing)))
+    )
+    assert not invalid, "requirements.lock records with invalid sha256 hashes: {}".format(
+        ", ".join(sorted(set(invalid)))
+    )

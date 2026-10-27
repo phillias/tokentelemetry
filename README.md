@@ -8,7 +8,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green)](https://nodejs.org)
-[![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://www.python.org)
+[![Python](https://img.shields.io/badge/Python-3.12%2B-blue)](https://www.python.org)
 [![Website](https://img.shields.io/badge/Website-tokentelemetry.com-blue)](https://tokentelemetry.com)
 [![GitHub Stars](https://img.shields.io/github/stars/VasiHemanth/tokentelemetry?style=social)](https://github.com/VasiHemanth/tokentelemetry)
 
@@ -207,10 +207,22 @@ Captured plan-mode outputs from Claude Code's `/plan` command and equivalent in 
 ## Requirements
 
 - **Node.js 20.9+** (22.22+ recommended; older versions install fine but npm prints `EBADENGINE` warnings)
-- **Python 3.9+**
+- **Python 3.12+**
 - **git**
 - Optional, for faster installs and updates: [uv](https://docs.astral.sh/uv/) (all platforms) and [Bun](https://bun.sh) (macOS and Linux). The launcher uses them when they're on your PATH and falls back to pip and npm otherwise.
 - Any supported AI coding agent already installed (Claude Code, Gemini CLI, Codex, etc.)
+
+### systemd user services
+
+Run the launcher through mise so a systemd service uses the same Python 3.12 runtime as interactive launches:
+
+```ini
+[Service]
+WorkingDirectory=/path/to/tokentelemetry
+ExecStart=%h/.local/bin/mise exec python@3.12 -- node /path/to/tokentelemetry/bin/cli.js
+```
+
+After updating an existing deployment, restart the service once. The launcher detects an older `backend/venv` interpreter, rebuilds that venv with the Python 3.12 selected by mise, and then installs the hash-pinned backend lock.
 
 ---
 
@@ -428,7 +440,7 @@ Know of another? [Open an issue](https://github.com/VasiHemanth/tokentelemetry/i
 ## Troubleshooting
 
 **Port conflicts:** Check/kill processes on ports 13000 and 18000.
-**Python not found:** Install Python 3.9+ and ensure it's in your PATH.  
+**Python not found:** Install Python 3.12+ and ensure it's in your PATH.  
 **No sessions showing:** Run an agent (Claude Code, Gemini CLI, etc.) first — TokenTelemetry needs existing log files.  
 **Windows issues:** Run PowerShell as Administrator for the installer.
 

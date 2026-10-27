@@ -202,12 +202,12 @@ The remote browser is sending the wrong token or no token.
 
 ## Python not found
 
-**Symptom:** The launcher exits with "Python 3.9+ is required."
+**Symptom:** The launcher exits with "Python 3.12+ is required."
 
-**Fix:** Install Python 3.9 or later from [python.org](https://www.python.org/downloads/) and ensure `python3` (or `python` on Windows) is in your PATH.
+**Fix:** Install Python 3.12 or later from [python.org](https://www.python.org/downloads/) and ensure `python3` (or `python` on Windows) is in your PATH. For systemd services, select the runtime through mise as described in the [installation guide](/docs/installation#systemd-user-services).
 
 ```bash
-python3 --version   # should show 3.9+
+python3 --version   # should show 3.12+
 ```
 
 ---

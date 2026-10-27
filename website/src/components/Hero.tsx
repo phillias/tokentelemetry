@@ -110,7 +110,7 @@ export default function Hero() {
                   </button>
                 </div>
                 <p className="mt-2 font-mono text-[11px] text-[var(--tt-fg-dim)] text-center lg:text-left">
-                  MIT · runs offline · needs Node 18+, Python 3.9+
+                  MIT · runs offline · needs Node 18+, Python 3.12+
                 </p>
                 <div className="hidden max-sm:flex items-center gap-1.5 mt-2 text-[12px] text-[var(--tt-fg-dim)]">
                   <Monitor size={13} className="text-[var(--tt-brand)] shrink-0" />
