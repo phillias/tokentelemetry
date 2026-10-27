@@ -18,7 +18,7 @@ Both failure modes have happened or are pending:
   the lock does exactly this, and nothing downstream notices.
 
 Regenerate with the command recorded in the lock's own header:
-    uv pip compile --universal --generate-hashes --python-version 3.9 \
+    uv pip compile --universal --generate-hashes --python-version 3.12 \
         backend/requirements.txt -o backend/requirements.lock
 
 A lock uv generated is consistent by construction: given a specifier it cannot

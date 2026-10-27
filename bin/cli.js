@@ -349,11 +349,11 @@ function findPython() {
       const m = probe.stdout.match(/\((\d+),\s*(\d+)\)/);
       if (m) {
         const [, maj, min] = m.map(Number);
-        if (maj >= 3 && min >= 9) return cmd;
+        if (maj > 3 || (maj === 3 && min >= 12)) return cmd;
       }
     }
   }
-  die('Python 3.9+ is required. Install from https://www.python.org/downloads/ and retry.');
+  die('Python 3.12+ is required. Install from https://www.python.org/downloads/ and retry.');
 }
 
 function pythonSeries() {
