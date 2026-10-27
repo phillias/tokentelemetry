@@ -1,0 +1,48 @@
+
+TokenTelemetry
+--------------
+→ rebuilding backend venv with Python 3.12+…
+→ creating Python venv…
+→ installing backend dependencies…
+→ installing frontend dependencies (first run can take a minute)…
+→ using bun (set TT_NO_BUN=1 to use npm instead)
+bun install v1.3.14 (0d9b296a)
+[113.01ms] migrated lockfile from package-lock.json
+Resolving dependencies
+Resolved, downloaded and extracted [1]
+Saved lockfile
+
++ @tailwindcss/postcss@4.3.3
++ @types/node@26.5.1
++ @types/react@19.3.0
++ @types/react-dom@19.3.0
++ eslint@9.39.5
++ eslint-config-next@16.3.5
++ tailwindcss@4.3.3
++ typescript@5.9.3
++ @lobehub/icons@5.18.0
++ clsx@2.1.1
++ date-fns@4.4.0
++ lucide-react@1.45.0
++ next@16.3.8
++ qrcode.react@4.2.0
++ react@19.3.0
++ react-dom@19.3.0
++ react-markdown@10.1.0
++ recharts@3.10.1
++ remark-gfm@4.0.1
++ tailwind-merge@3.6.0
+
+824 packages installed [8.23s]
+
+Blocked 1 postinstall. Run `bun pm untrusted` for details.
+
+→ launching services…
+
+Dashboard:  http://localhost:13124
+API:        http://localhost:18124
+Data dir:   /home/phillias/.tokentelemetry
+Press Ctrl+C to stop.
+
+
+→ stopping services…
