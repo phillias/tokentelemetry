@@ -219,7 +219,7 @@ Run the launcher through mise so a systemd service uses the same Python 3.12 run
 ```ini
 [Service]
 WorkingDirectory=/path/to/tokentelemetry
-ExecStart=/usr/bin/mise exec python@3.12 -- node /path/to/tokentelemetry/bin/cli.js
+ExecStart=%h/.local/bin/mise exec python@3.12 -- node /path/to/tokentelemetry/bin/cli.js
 ```
 
 After updating an existing deployment, restart the service once. The launcher detects an older `backend/venv` interpreter, rebuilds that venv with the Python 3.12 selected by mise, and then installs the hash-pinned backend lock.

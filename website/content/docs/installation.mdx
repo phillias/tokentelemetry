@@ -82,7 +82,7 @@ For a systemd-managed checkout, run the launcher through mise so the service and
 ```ini
 [Service]
 WorkingDirectory=/path/to/tokentelemetry
-ExecStart=/usr/bin/mise exec python@3.12 -- node /path/to/tokentelemetry/bin/cli.js
+ExecStart=%h/.local/bin/mise exec python@3.12 -- node /path/to/tokentelemetry/bin/cli.js
 ```
 
 After updating an existing deployment, restart the service once. The launcher detects an older `backend/venv` interpreter, removes that venv, and rebuilds it with the Python 3.12 selected by mise before installing the hash-pinned lock.
