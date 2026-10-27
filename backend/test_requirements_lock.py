@@ -37,6 +37,7 @@ import re
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 from packaging.version import Version
+from pip._internal.req.req_file import parse_requirements
 
 HERE = os.path.dirname(__file__)
 REQ = os.path.join(HERE, "requirements.txt")
@@ -46,7 +47,6 @@ LOCK = os.path.join(HERE, "requirements.lock")
 #   zstandard==0.25.0 \
 #   uvicorn==0.51.0 ; python_full_version >= '3.10' \
 _PIN = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._-]*)==([^\s;\\]+)\s*(?:;\s*(.*?))?\s*\\?$")
-_HASH = re.compile(r"^\s+--hash=sha256:([0-9a-f]{64})(?:\s+\\)?$")
 
 
 def _direct_requirements():
@@ -84,29 +84,14 @@ def _locked_pins():
 def _locked_records():
     """Parsed lock records with the hashes pip will verify."""
     records = []
-    current = None
-    with open(LOCK, encoding="utf-8") as fh:
-        for line in fh:
-            line = line.rstrip("\n")
-            m = _PIN.match(line)
-            if m:
-                current = {"name": canonicalize_name(m.group(1)), "hashes": [], "invalid_hashes": []}
-                records.append(current)
-                continue
-            if not current:
-                continue
-            content = line.split("#", 1)[0].rstrip()
-            if not content:
-                continue
-            hash_match = _HASH.fullmatch(content)
-            if hash_match:
-                current["hashes"].append(hash_match.group(1))
-            elif "--hash=sha256:" in content:
-                current["invalid_hashes"].append(content)
-            else:
-                current = None
-            if current and not line.rstrip().endswith("\\"):
-                current = None
+    for parsed in parse_requirements(LOCK, session=None):
+        if not parsed.requirement:
+            continue
+        hashes = parsed.options.get("hashes", {})
+        records.append({
+            "name": canonicalize_name(Requirement(parsed.requirement).name),
+            "hashes": hashes.get("sha256", []),
+        })
     return records
 
 
@@ -155,7 +140,9 @@ def test_lock_is_hash_pinned():
     silently falls back to requirements.txt and this guard would be moot."""
     records = _locked_records()
     missing = [record["name"] for record in records if not record["hashes"]]
-    invalid = [record["name"] for record in records if record["invalid_hashes"]]
+    invalid = [record["name"] for record in records if any(
+        not re.fullmatch(r"[0-9a-f]{64}", digest) for digest in record["hashes"]
+    )]
     assert records, "requirements.lock contains no parsed requirement records"
     assert not missing, "requirements.lock records without sha256 hashes: {}".format(
         ", ".join(sorted(set(missing)))
