@@ -1,0 +1,36 @@
+name: Feature request
+description: Propose a new feature or improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What should change, and why?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How do we know the work is done?
+    validations:
+      required: true
+  - type: dropdown
+    id: delivery
+    attributes:
+      label: Delivery mode
+      description: How should this work be delivered?
+      options:
+        - Autonomous (ship directly)
+        - Supervised (plan for review first)
+        - Docs only
+    validations:
+      required: true
+  - type: textarea
+    id: reversion
+    attributes:
+      label: Reversion actions
+      description: How to roll back or mitigate if the change causes harm?
+    validations:
+      required: false
